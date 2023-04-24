@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "publish": "tsc&&publish"
+    "publish": "tsc&&npm publish"
   },
   "keywords": [],
   "author": "",
