@@ -1,7 +1,7 @@
 {
   "name": "@deson/fetch",
-  "version": "1.1.1",
-  "description": "",
+  "version": "1.1.2",
+  "description": "一个基于fetch api封装的restful请求风格的简易http请求库",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
@@ -9,7 +9,6 @@
     "url": "https://github.com/desonyuan/deson-fetch"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc"
   },
   "keywords": [],
