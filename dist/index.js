@@ -144,7 +144,7 @@ class Request {
      * @param id 需要删除记录的id
      * @returns
      */
-    delete(id = '', data = {}, reqOption = {}) {
+    delete(id = '', data, reqOption = {}) {
         const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
         const url = reqUrl ? this.url + reqUrl : this.url;
         return this.fetch(`${url}${id ? '/' + id : ''}`, 'DELETE', Object.assign({ data }, reqParam));
@@ -155,7 +155,7 @@ class Request {
      * @param data 更新的新的字段对象
      * @returns
      */
-    put(id = '', data = {}, reqOption = {}) {
+    put(id = '', data, reqOption = {}) {
         const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
         const url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
         return this.fetch(`${url}${id ? '/' + id : ''}`, "PUT", Object.assign({ data }, reqParam));
@@ -166,7 +166,7 @@ class Request {
    * @param data 更新的新的字段对象
    * @returns
    */
-    patch(id = '', data = {}, reqOption = {}) {
+    patch(id = '', data, reqOption = {}) {
         const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
         const url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
         return this.fetch(`${url}${id ? '/' + id : ''}`, "PATCH", Object.assign({ data }, reqParam));

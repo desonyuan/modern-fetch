@@ -68,7 +68,7 @@ export const CommonHttp = new DesonFetch({
 const PostApi = CommonHttp.create('/post');
 GoodsApi.post(data,options) // 会发送一个post请求http://www.baidu.com/api/post，第一个参数为发送的数据，第二个参数下面说明;
 /**PostApi对象拥有post、delete、get、put、patch、getOne请求方法;
- *这里说一下每个请求都有的第二个参数option，该参数为一个对象：
+ *这里说一下每个请求都有的options参数，这是一个可选参数，如果传入该参数请在请求方法的最后一个参数位传入，例如post方法在第二个参数位，put和delete方法在第三个，该参数为一个对象：
  *{
  	url:string, //如果你想发送到http://www.baidu.com/api/post/popular，url这里写popular，内部会拼接地址;
  	ResponseType : "json" | 'stream' | 'text',//如果在构造的时候没有写响应resInterceptor拦截器，内部默认会把响应结果执行    									  response.json()，如果传入stream会直接返回response方便用户自行处理下载等操作。
