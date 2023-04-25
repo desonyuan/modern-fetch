@@ -136,7 +136,7 @@ class Request {
      */
     post(data, reqOption = {}) {
         const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
-        const url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
+        const url = reqUrl ? `${this.url}/${removeSlash(reqUrl)}` : this.url;
         return this.fetch(url, "POST", Object.assign({ data }, reqParam));
     }
     /**
@@ -146,7 +146,7 @@ class Request {
      */
     delete(id, data, reqOption = {}) {
         const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
-        const url = reqUrl ? this.url + reqUrl : this.url;
+        const url = reqUrl ? `${this.url}/${removeSlash(reqUrl)}` : this.url;
         return this.fetch(`${url}${id ? '/' + id : ''}`, 'DELETE', Object.assign({ data }, reqParam));
     }
     /**
@@ -157,7 +157,7 @@ class Request {
      */
     put(id, data, reqOption = {}) {
         const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
-        const url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
+        const url = reqUrl ? `${this.url}/${removeSlash(reqUrl)}` : this.url;
         return this.fetch(`${url}${id ? '/' + id : ''}`, "PUT", Object.assign({ data }, reqParam));
     }
     /**
@@ -168,7 +168,7 @@ class Request {
    */
     patch(id, data, reqOption = {}) {
         const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
-        let url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
+        let url = reqUrl ? `${this.url}/${removeSlash(reqUrl)}` : this.url;
         return this.fetch(`${url}${id ? '/' + id : ''}`, "PATCH", Object.assign({ data }, reqParam));
     }
     /**
@@ -178,7 +178,7 @@ class Request {
      */
     get(params, reqOption = {}) {
         const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
-        let url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
+        let url = reqUrl ? `${this.url}/${removeSlash(reqUrl)}` : this.url;
         // 拼接get方法请求参数
         if (params) {
             url += '?' + new URLSearchParams(params);
@@ -193,7 +193,7 @@ class Request {
     getOne(id, params, reqOption = {}) {
         // 拼接get方法请求参数
         const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
-        let url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
+        let url = reqUrl ? `${this.url}/${removeSlash(reqUrl)}` : this.url;
         id ? url += `/${id}` : undefined;
         // 拼接get方法请求参数
         if (params) {
