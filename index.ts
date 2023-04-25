@@ -135,7 +135,7 @@ class Request {
    */
   post<R>(data?: DataType, reqOption: RequestOption = {}): Promise<R> {
     const { url: reqUrl, ...reqParam } = reqOption;
-    const url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url
+    const url = reqUrl ?`${this.url}/${removeSlash(reqUrl)}` : this.url
     return this.fetch(url, "POST", {
       data,
       ...reqParam
@@ -148,7 +148,7 @@ class Request {
    */
   delete<R>(id?: string | number, data?: DataType, reqOption: RequestOption = {}): Promise<R> {
     const { url: reqUrl, ...reqParam } = reqOption;
-    const url = reqUrl ? this.url + reqUrl : this.url;
+    const url = reqUrl ? `${this.url}/${removeSlash(reqUrl)}` : this.url;
     return this.fetch(`${url}${id ? '/' + id : ''}`, 'DELETE', {
       data,
       ...reqParam
@@ -162,7 +162,7 @@ class Request {
    */
   put<R>(id?: string | number, data?: DataType, reqOption: RequestOption = {}): Promise<R> {
     const { url: reqUrl, ...reqParam } = reqOption;
-    const url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
+    const url = reqUrl ?`${this.url}/${removeSlash(reqUrl)}` : this.url;
     return this.fetch(`${url}${id ? '/' + id : ''}`, "PUT", {
       data,
       ...reqParam
@@ -176,7 +176,7 @@ class Request {
  */
   patch<R>(id?: string | number, data?: DataType, reqOption: RequestOption = {}): Promise<R> {
     const { url: reqUrl, ...reqParam } = reqOption;
-    let url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
+    let url = reqUrl ?`${this.url}/${removeSlash(reqUrl)}` : this.url;
     return this.fetch(`${url}${id ? '/' + id : ''}`, "PATCH", {
       data,
       ...reqParam
@@ -189,7 +189,7 @@ class Request {
    */
   get<R>(params?: DataType,reqOption: RequestOption={}): Promise<R> {
     const { url: reqUrl,  ...reqParam } = reqOption;
-    let url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
+    let url = reqUrl ?`${this.url}/${removeSlash(reqUrl)}` : this.url;
     // 拼接get方法请求参数
     if (params) {
       url += '?' + new URLSearchParams(params)
@@ -204,7 +204,7 @@ class Request {
   getOne<R>(id?: number | string,params?:DataType, reqOption: RequestOption = {}): Promise<R> {
     // 拼接get方法请求参数
     const { url: reqUrl, ...reqParam } = reqOption;
-    let url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
+    let url = reqUrl ?`${this.url}/${removeSlash(reqUrl)}` : this.url;
     id?url += `/${id}`:undefined;
     // 拼接get方法请求参数
     if (params) {
