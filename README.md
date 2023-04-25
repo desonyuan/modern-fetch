@@ -83,8 +83,8 @@ GoodsApi.post(data, options); // 会发送一个post请求http://www.baidu.com/a
 get(params?:Record<string,string>,options?);//get请求，params参数为queryString组合对象
 getOne(id:number|string,params?:Record<string,string>,options?)
 post(data?::Record<string,any>|FormData,options) //post请求
-put(id:number|string,data?:Record<string,any>|FormData,options?) //put请求
-patch(id:number|string,data?:Record<string,any>|FormData,options?) //patch请求
-delete(id:number|string,data?:Record<string,any>|FormData,options?) //delete请求
+put(id:number|string?,data?:Record<string,any>|FormData,options?) //put请求
+patch(id:number|string?,data?:Record<string,any>|FormData,options?) //patch请求
+delete(id:number|string?,data?:Record<string,any>|FormData,options?) //delete请求
 ```
 
