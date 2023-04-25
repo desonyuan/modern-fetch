@@ -231,7 +231,7 @@ export class DesonFetch {
       if (baseUrl) {
         _url = `${removeSlash(baseUrl)}/${removeSlash(prefix)}/${removeSlash(url)}`
       } else {
-        _url = `/${removeSlash(prefix)}/${removeSlash(url)}`;
+        _url = `/${removeSlash(prefix)}}`;
       }
     } else {
       if (baseUrl) {
