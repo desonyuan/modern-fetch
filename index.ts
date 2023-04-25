@@ -226,20 +226,20 @@ export class DesonFetch {
    */
   create(url: string) {
     const { baseUrl, prefix, ...props } = this.options;
-    let _url = ''
+    let str = ''
     if (prefix) {
       if (baseUrl) {
-        _url = `${removeSlash(baseUrl)}/${removeSlash(prefix)}/${removeSlash(url)}`
+        str = `${removeSlash(baseUrl)}/${removeSlash(prefix)}/${removeSlash(url)}`
       } else {
-        _url = `/${removeSlash(prefix)}}`;
+        str = `/${removeSlash(prefix)}/${removeSlash(url)}`;
       }
     } else {
       if (baseUrl) {
-        _url = `${removeSlash(baseUrl)}/${removeSlash(url)}`
+        str = `${removeSlash(baseUrl)}/${removeSlash(url)}`
       } else {
-        _url = `/${removeSlash(url)}`;
+        str = `/${removeSlash(url)}`;
       }
     }
-    return new Request({ url: _url, ...props })
+    return new Request({ url: str, ...props })
   }
 }
