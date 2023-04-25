@@ -79,6 +79,12 @@ GoodsApi.post(data, options); // 会发送一个post请求http://www.baidu.com/a
  	fetchOptions：fetch请求参数剔除了body、method、headers选项，参考 https://developer.mozilla.org/zh-CN/docs/Web/API/fetch
   }
  */
-
+//由于每个options位于请求方法最后一个参数，如果不需要发送请求参数，但是需要定义options，请求参数位置可以传undefined
+get(params?:Record<string,string>,options?);//get请求，params参数为queryString组合对象
+getOne(id:number|string,params?:Record<string,string>,options?)
+post(data?::Record<string,any>|FormData,options) //post请求
+put(id:number|string,data?:Record<string,any>|FormData,options?) //put请求
+patch(id:number|string,data?:Record<string,any>|FormData,options?) //patch请求
+delete(id:number|string,data?:Record<string,any>|FormData,options?) //delete请求
 ```
 

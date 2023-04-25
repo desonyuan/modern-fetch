@@ -15,8 +15,7 @@ interface IDesonFetchFactory {
 
 type RequestFactory = Omit<IDesonFetchFactory, "baseUrl" | "prefix"> & { url: string }
 // 发起实例请求方法参数类型
-type RequestOption = Omit<Partial<RequestFactory>, "resInterceptor" | "errInterceptor"> & { responseType?: ResponseType }
-type GetRequestOption = RequestOption & { params?: DataType };
+type RequestOption = Omit<Partial<RequestFactory>, "resInterceptor" | "errInterceptor"> & { responseType?: ResponseType,url?:string }
 //发起fetch请求函数参数类型
 type IFetchParam = Omit<RequestOption, "url"> & { data?: DataType }
 /**
@@ -147,7 +146,7 @@ class Request {
    * @param id 需要删除记录的id
    * @returns
    */
-  delete<R>(id: string | number = '', data?: DataType, reqOption: RequestOption = {}): Promise<R> {
+  delete<R>(id?: string | number, data?: DataType, reqOption: RequestOption = {}): Promise<R> {
     const { url: reqUrl, ...reqParam } = reqOption;
     const url = reqUrl ? this.url + reqUrl : this.url;
     return this.fetch(`${url}${id ? '/' + id : ''}`, 'DELETE', {
@@ -161,7 +160,7 @@ class Request {
    * @param data 更新的新的字段对象
    * @returns
    */
-  put<R>(id: string | number = '', data?: DataType, reqOption: RequestOption = {}): Promise<R> {
+  put<R>(id?: string | number, data?: DataType, reqOption: RequestOption = {}): Promise<R> {
     const { url: reqUrl, ...reqParam } = reqOption;
     const url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
     return this.fetch(`${url}${id ? '/' + id : ''}`, "PUT", {
@@ -175,9 +174,9 @@ class Request {
  * @param data 更新的新的字段对象
  * @returns
  */
-  patch<R>(id: string | number = '', data?: DataType, reqOption: RequestOption = {}): Promise<R> {
+  patch<R>(id?: string | number, data?: DataType, reqOption: RequestOption = {}): Promise<R> {
     const { url: reqUrl, ...reqParam } = reqOption;
-    const url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
+    let url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
     return this.fetch(`${url}${id ? '/' + id : ''}`, "PATCH", {
       data,
       ...reqParam
@@ -188,8 +187,8 @@ class Request {
    * @param params 查询的条件参数
    * @returns
    */
-  get<R>(reqOption: GetRequestOption = {}): Promise<R> {
-    const { url: reqUrl, params, ...reqParam } = reqOption;
+  get<R>(params?: DataType,reqOption: RequestOption={}): Promise<R> {
+    const { url: reqUrl,  ...reqParam } = reqOption;
     let url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
     // 拼接get方法请求参数
     if (params) {
@@ -202,11 +201,11 @@ class Request {
    * @param id 记录id
    * @returns
    */
-  getOne<R>(id: number | string, reqOption: GetRequestOption = {}): Promise<R> {
+  getOne<R>(id?: number | string,params?:DataType, reqOption: RequestOption = {}): Promise<R> {
     // 拼接get方法请求参数
-    const { url: reqUrl, params, ...reqParam } = reqOption;
+    const { url: reqUrl, ...reqParam } = reqOption;
     let url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
-    url += `/${id}`;
+    id?url += `/${id}`:undefined;
     // 拼接get方法请求参数
     if (params) {
       url += '?' + new URLSearchParams(params)
