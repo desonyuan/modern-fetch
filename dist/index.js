@@ -144,7 +144,7 @@ class Request {
      * @param id 需要删除记录的id
      * @returns
      */
-    delete(id = '', data, reqOption = {}) {
+    delete(id, data, reqOption = {}) {
         const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
         const url = reqUrl ? this.url + reqUrl : this.url;
         return this.fetch(`${url}${id ? '/' + id : ''}`, 'DELETE', Object.assign({ data }, reqParam));
@@ -155,7 +155,7 @@ class Request {
      * @param data 更新的新的字段对象
      * @returns
      */
-    put(id = '', data, reqOption = {}) {
+    put(id, data, reqOption = {}) {
         const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
         const url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
         return this.fetch(`${url}${id ? '/' + id : ''}`, "PUT", Object.assign({ data }, reqParam));
@@ -166,9 +166,9 @@ class Request {
    * @param data 更新的新的字段对象
    * @returns
    */
-    patch(id = '', data, reqOption = {}) {
+    patch(id, data, reqOption = {}) {
         const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
-        const url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
+        let url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
         return this.fetch(`${url}${id ? '/' + id : ''}`, "PATCH", Object.assign({ data }, reqParam));
     }
     /**
@@ -176,8 +176,8 @@ class Request {
      * @param params 查询的条件参数
      * @returns
      */
-    get(reqOption = {}) {
-        const { url: reqUrl, params } = reqOption, reqParam = __rest(reqOption, ["url", "params"]);
+    get(params, reqOption = {}) {
+        const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
         let url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
         // 拼接get方法请求参数
         if (params) {
@@ -190,11 +190,11 @@ class Request {
      * @param id 记录id
      * @returns
      */
-    getOne(id, reqOption = {}) {
+    getOne(id, params, reqOption = {}) {
         // 拼接get方法请求参数
-        const { url: reqUrl, params } = reqOption, reqParam = __rest(reqOption, ["url", "params"]);
+        const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
         let url = reqUrl ? this.url + '/' + removeSlash(reqUrl) : this.url;
-        url += `/${id}`;
+        id ? url += `/${id}` : undefined;
         // 拼接get方法请求参数
         if (params) {
             url += '?' + new URLSearchParams(params);

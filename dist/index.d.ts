@@ -15,9 +15,7 @@ type RequestFactory = Omit<IDesonFetchFactory, "baseUrl" | "prefix"> & {
 };
 type RequestOption = Omit<Partial<RequestFactory>, "resInterceptor" | "errInterceptor"> & {
     responseType?: ResponseType;
-};
-type GetRequestOption = RequestOption & {
-    params?: DataType;
+    url?: string;
 };
 /**
  *fetch原生请求 用于不做任何包装的fetch请求
@@ -62,13 +60,13 @@ declare class Request {
      * @param params 查询的条件参数
      * @returns
      */
-    get<R>(reqOption?: GetRequestOption): Promise<R>;
+    get<R>(params?: DataType, reqOption?: RequestOption): Promise<R>;
     /**
      * 查询一个
      * @param id 记录id
      * @returns
      */
-    getOne<R>(id: number | string, reqOption?: GetRequestOption): Promise<R>;
+    getOne<R>(id?: number | string, params?: DataType, reqOption?: RequestOption): Promise<R>;
 }
 /**
  * 构造DesonFetch实例，通常需要传入BaseUrl
