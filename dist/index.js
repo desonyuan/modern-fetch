@@ -1,24 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DesonFetch = exports.request = void 0;
 /**
@@ -32,9 +12,9 @@ const removeSlash = (str) => {
 /**
  *fetch原生请求 用于不做任何包装的fetch请求
  */
-const request = (url, options) => __awaiter(void 0, void 0, void 0, function* () {
-    return yield fetch(url, options);
-});
+const request = async (url, options) => {
+    return await fetch(url, options);
+};
 exports.request = request;
 // 请求类/
 class Request {
@@ -47,89 +27,91 @@ class Request {
         this.url = url !== null && url !== void 0 ? url : '';
     }
     // 发送请求
-    fetch(url, method, options) {
-        return __awaiter(this, void 0, void 0, function* () {
-            method = method.toUpperCase();
-            const { data, headers, responseType, fetchOptions } = options;
-            let body;
-            // 合并请求头
-            const assignHeader = Object.assign({}, this.headers, headers);
-            const _headers = new Headers(assignHeader);
-            // 合并fetch请求参数
-            const _fetchOptions = Object.assign({}, this.fetchOptions, fetchOptions);
-            // 处理数据&&是否需要写contentType请求头,如果有传入content type 则不做任何处理
-            const contentType = _headers.get('Content-Type');
-            if (method === "GET" || method === "HEAD") {
-                if (!contentType) {
-                    _headers.append('Content-Type', 'application/x-www-form-urlencode');
-                }
+    async fetch(url, method, options) {
+        method = method.toUpperCase();
+        const { data, headers, responseType, fetchOptions } = options;
+        let body;
+        // 合并请求头
+        const assignHeader = Object.assign({}, this.headers, headers);
+        const _headers = new Headers(assignHeader);
+        // 合并fetch请求参数
+        const _fetchOptions = Object.assign({}, this.fetchOptions, fetchOptions);
+        // 处理数据&&是否需要写contentType请求头,如果有传入content type 则不做任何处理
+        const contentType = _headers.get('Content-Type');
+        if (method === "GET" || method === "HEAD") {
+            if (!contentType) {
+                _headers.append('Content-Type', 'application/x-www-form-urlencode');
             }
-            else {
-                if (data) {
-                    if (FormData && data instanceof FormData) {
-                        body = data;
-                    }
-                    else {
-                        if (!contentType) {
-                            if (typeof data === 'object') {
-                                _headers.append("Content-type", 'application/json;charset=utf-8');
-                                try {
-                                    body = JSON.stringify(data);
-                                }
-                                catch (error) {
-                                    console.log(error, '------DesonFetch');
-                                }
-                            }
-                        }
-                        else {
-                            if (typeof data === 'object') {
-                                try {
-                                    body = JSON.stringify(data);
-                                }
-                                catch (error) {
-                                    console.log(error, '------DesonFetch');
-                                }
-                            }
-                        }
-                    }
+        }
+        else {
+            if (data) {
+                if (FormData && data instanceof FormData) {
+                    body = data;
                 }
                 else {
                     if (!contentType) {
-                        _headers.append("Content-type", 'application/json;charset=utf-8');
+                        if (typeof data === 'object') {
+                            _headers.append("Content-type", 'application/json;charset=utf-8');
+                            try {
+                                body = JSON.stringify(data);
+                            }
+                            catch (error) {
+                                console.log(error, '------DesonFetch');
+                            }
+                        }
+                    }
+                    else {
+                        if (typeof data === 'object') {
+                            try {
+                                body = JSON.stringify(data);
+                            }
+                            catch (error) {
+                                console.log(error, '------DesonFetch');
+                            }
+                        }
                     }
                 }
             }
-            // 发送请求
-            try {
-                const response = yield (0, exports.request)(url, Object.assign({ headers: _headers, method,
-                    body }, _fetchOptions));
-                // 有拦截器，执行拦截器
-                if (this.resInterceptor) {
-                    return yield this.resInterceptor(response, {
-                        headers: assignHeader, responseType, fetchOptions: _fetchOptions, url,
-                    });
-                }
-                else {
-                    switch (responseType) {
-                        case undefined:
-                        case "json":
-                            return yield response.json();
-                        case "text":
-                            return yield response.text();
-                        case "stream":
-                            return response;
-                    }
+            else {
+                if (!contentType) {
+                    _headers.append("Content-type", 'application/json;charset=utf-8');
                 }
             }
-            catch (err) {
-                if (this.errInterceptor) {
-                    return this.errInterceptor(err);
-                }
-                else {
-                    console.error(err);
+        }
+        // 发送请求
+        try {
+            const response = await (0, exports.request)(url, {
+                headers: _headers,
+                method,
+                body,
+                ..._fetchOptions,
+            });
+            // 有拦截器，执行拦截器
+            if (this.resInterceptor) {
+                return await this.resInterceptor(response, {
+                    headers: assignHeader, responseType, fetchOptions: _fetchOptions, url,
+                });
+            }
+            else {
+                switch (responseType) {
+                    case undefined:
+                    case "json":
+                        return await response.json();
+                    case "text":
+                        return await response.text();
+                    case "stream":
+                        return response;
                 }
             }
-        });
+        }
+        catch (err) {
+            if (this.errInterceptor) {
+                return this.errInterceptor(err);
+            }
+            else {
+                return Promise.reject(err);
+            }
+        }
     }
     /**
      * post请求
@@ -137,9 +119,12 @@ class Request {
      * @returns
      */
     post(data, reqOption = {}) {
-        const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
+        const { url: reqUrl, ...reqParam } = reqOption;
         const url = reqUrl ? `${this.url}/${removeSlash(reqUrl)}` : this.url;
-        return this.fetch(url, "POST", Object.assign({ data }, reqParam));
+        return this.fetch(url, "POST", {
+            data,
+            ...reqParam
+        });
     }
     /**
      * 删除
@@ -147,9 +132,12 @@ class Request {
      * @returns
      */
     delete(id, data, reqOption = {}) {
-        const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
+        const { url: reqUrl, ...reqParam } = reqOption;
         const url = reqUrl ? `${this.url}/${removeSlash(reqUrl)}` : this.url;
-        return this.fetch(`${url}${id ? '/' + id : ''}`, 'DELETE', Object.assign({ data }, reqParam));
+        return this.fetch(`${url}${id ? '/' + id : ''}`, 'DELETE', {
+            data,
+            ...reqParam
+        });
     }
     /**
      * 更新update 方法
@@ -158,9 +146,12 @@ class Request {
      * @returns
      */
     put(id, data, reqOption = {}) {
-        const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
+        const { url: reqUrl, ...reqParam } = reqOption;
         const url = reqUrl ? `${this.url}/${removeSlash(reqUrl)}` : this.url;
-        return this.fetch(`${url}${id ? '/' + id : ''}`, "PUT", Object.assign({ data }, reqParam));
+        return this.fetch(`${url}${id ? '/' + id : ''}`, "PUT", {
+            data,
+            ...reqParam
+        });
     }
     /**
    * 更新patch 方法
@@ -169,9 +160,12 @@ class Request {
    * @returns
    */
     patch(id, data, reqOption = {}) {
-        const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
+        const { url: reqUrl, ...reqParam } = reqOption;
         let url = reqUrl ? `${this.url}/${removeSlash(reqUrl)}` : this.url;
-        return this.fetch(`${url}${id ? '/' + id : ''}`, "PATCH", Object.assign({ data }, reqParam));
+        return this.fetch(`${url}${id ? '/' + id : ''}`, "PATCH", {
+            data,
+            ...reqParam
+        });
     }
     /**
      * 条件查询
@@ -179,7 +173,7 @@ class Request {
      * @returns
      */
     get(params, reqOption = {}) {
-        const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
+        const { url: reqUrl, ...reqParam } = reqOption;
         // let url = reqUrl ?`${this.url}/${removeSlash(reqUrl)}` : this.url;
         let url = this.url;
         if (reqUrl) {
@@ -201,7 +195,7 @@ class Request {
      */
     getOne(id, params, reqOption = {}) {
         // 拼接get方法请求参数
-        const { url: reqUrl } = reqOption, reqParam = __rest(reqOption, ["url"]);
+        const { url: reqUrl, ...reqParam } = reqOption;
         let url = reqUrl ? `${this.url}/${removeSlash(reqUrl)}` : this.url;
         id ? url += `/${id}` : undefined;
         // 拼接get方法请求参数
@@ -224,7 +218,7 @@ class DesonFetch {
      * @returns Request
      */
     create(url) {
-        const _a = this.options, { baseUrl, prefix } = _a, props = __rest(_a, ["baseUrl", "prefix"]);
+        const { baseUrl, prefix, ...props } = this.options;
         const _url = url ? `/${removeSlash(url)}` : '';
         let str = '';
         if (prefix) {
@@ -243,7 +237,7 @@ class DesonFetch {
                 str = _url;
             }
         }
-        return new Request(Object.assign({ url: str }, props));
+        return new Request({ url: str, ...props });
     }
 }
 exports.DesonFetch = DesonFetch;

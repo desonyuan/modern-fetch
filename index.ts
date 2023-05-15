@@ -124,7 +124,7 @@ class Request {
       if (this.errInterceptor) {
         return this.errInterceptor(err as TypeError)
       }else{
-        console.error(err);
+       return Promise.reject(err)
       }
     }
 
