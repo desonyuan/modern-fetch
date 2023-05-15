@@ -60,7 +60,7 @@ declare class Request {
      * @param params 查询的条件参数
      * @returns
      */
-    get<R>(params?: DataType, reqOption?: RequestOption): Promise<R>;
+    get<R>(params?: DataType | string, reqOption?: RequestOption): Promise<R>;
     /**
      * 查询一个
      * @param id 记录id

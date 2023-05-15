@@ -69,22 +69,23 @@ class Request {
       if (data) {
         if (FormData && data instanceof FormData) {
           body = data;
-        }
-        if (!contentType) {
-          if (typeof data === 'object') {
-            _headers.append("Content-type", 'application/json;charset=utf-8')
-            try {
-              body = JSON.stringify(data)
-            } catch (error) {
-              console.log(error, '------DesonFetch')
+        }else{
+          if (!contentType) {
+            if (typeof data === 'object') {
+              _headers.append("Content-type", 'application/json;charset=utf-8')
+              try {
+                body = JSON.stringify(data)
+              } catch (error) {
+                console.log(error, '------DesonFetch')
+              }
             }
-          }
-        } else {
-          if (typeof data === 'object') {
-            try {
-              body = JSON.stringify(data)
-            } catch (error) {
-              console.log(error, '------DesonFetch')
+          } else {
+            if (typeof data === 'object') {
+              try {
+                body = JSON.stringify(data)
+              } catch (error) {
+                console.log(error, '------DesonFetch')
+              }
             }
           }
         }
@@ -187,11 +188,17 @@ class Request {
    * @param params 查询的条件参数
    * @returns
    */
-  get<R>(params?: DataType,reqOption: RequestOption={}): Promise<R> {
+  get<R>(params?: DataType|string,reqOption: RequestOption={}): Promise<R> {
     const { url: reqUrl,  ...reqParam } = reqOption;
-    let url = reqUrl ?`${this.url}/${removeSlash(reqUrl)}` : this.url;
-    // 拼接get方法请求参数
-    if (params) {
+    // let url = reqUrl ?`${this.url}/${removeSlash(reqUrl)}` : this.url;
+    let url=this.url;
+    if(reqUrl){
+      url+=`/${removeSlash(reqUrl)}`
+    }
+    if(typeof params==="string"){
+      url+=removeSlash(params);
+    }else if(typeof params=="object" ){
+      // 拼接get方法请求参数
       url += '?' + new URLSearchParams(params)
     }
     return this.fetch(url, 'GET', reqParam);
@@ -226,18 +233,19 @@ export class DesonFetch {
    */
   create(url: string) {
     const { baseUrl, prefix, ...props } = this.options;
-    let str = ''
+    const _url=url?`/${removeSlash(url)}`:'';
+    let str = '';
     if (prefix) {
       if (baseUrl) {
-        str = `${removeSlash(baseUrl)}/${removeSlash(prefix)}/${removeSlash(url)}`
+        str = `${removeSlash(baseUrl)}/${removeSlash(prefix)}${_url}`
       } else {
-        str = `/${removeSlash(prefix)}/${removeSlash(url)}`;
+        str = `/${removeSlash(prefix)}${_url}`;
       }
     } else {
       if (baseUrl) {
-        str = `${removeSlash(baseUrl)}/${removeSlash(url)}`
+        str = `${removeSlash(baseUrl)}${_url}`
       } else {
-        str = `/${removeSlash(url)}`;
+        str = _url;
       }
     }
     return new Request({ url: str, ...props })
