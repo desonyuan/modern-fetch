@@ -57,6 +57,7 @@ class Request {
                             }
                             catch (error) {
                                 console.log(error, '------DesonFetch');
+                                return Promise.reject(error);
                             }
                         }
                     }
@@ -67,6 +68,7 @@ class Request {
                             }
                             catch (error) {
                                 console.log(error, '------DesonFetch');
+                                return Promise.reject(error);
                             }
                         }
                     }
@@ -125,13 +127,16 @@ class Request {
         if (data) {
             if (typeof data === "string") {
                 url += removeSlash(data);
+                if (body.data) {
+                    url += '?' + new URLSearchParams(body.data);
+                }
             }
             else if (typeof data == "object") {
                 if (method === "GET") {
                     url += '?' + new URLSearchParams(data);
                 }
                 else {
-                    body = { data };
+                    body.data = data;
                 }
             }
         }
