@@ -1,6 +1,6 @@
 {
   "name": "@deson/fetch",
-  "version": "1.2.6",
+  "version": "2.0.0",
   "description": "一个基于fetch api封装的restful请求风格的简易http请求库",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

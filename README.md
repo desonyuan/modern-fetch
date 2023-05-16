@@ -21,36 +21,38 @@ interface ResponseStructure {
   message: string;
 }
 
-//构造一个实例对象
+//构造一个实例对象 构造参数内的选项均为可选参数
 export const CommonHttp = new DesonFetch({
   baseUrl: 'http://www.baidu.com',//该实例的请求地址
   prefix: 'api', //请求前缀，为了统一所有请求前缀，默认进行了前后去"/"处理，也就是说你传入/api 和/api/ 最终结果是一样的；
-  fetchOptions: {
-    //原生fetch 剔除body、method、headers选项。 Omit<RequestInit, "body" | "method" | "headers">
+  fetchOptions: {//原生fetch 剔除body、method、headers选项。 Omit<RequestInit, "body" | "method" | "headers">
     mode: 'cors',
     credentials: 'include',
   },
-  /*  响应拦截器response.ok===true会执行此函数，如果不传此函数，默认请求options（下文会介绍这个options）中没有responseType或者responseType等于json的
-  时候会执行
-  await response.json()
-  建议传此函数自行处理响应结果。
+  /* 响应拦截器
+  *如果不传此函数，默认请求参数options中没有responseType或者responseType等于json的时候会执行 await response.json()
+  *建议传此函数自行处理响应结果。
   */
-
   async resInterceptor(response, options) {
     const { responseType } = options!;
     // 请求成功示例
-    if (response.status === 200) {
+    if (response.ok) {
       try {
-        const resData: ResponseStructure = await response.json();
-        const { statusCode, data, message } = resData;
-        if (statusCode === 200) {
-          return data;
-        } else {
-          Toast.show({
-            icon: 'fail',
-            content: message,
-          });
+        if(!responseType||responseType==="json"){
+            const resData: ResponseStructure = await response.json();
+            const { statusCode, data, message } = resData;
+            if (statusCode === 200) {
+              return data;
+            } else {
+              Toast.show({
+                icon: 'fail',
+                content: message,
+              });
+            }
+        }else{
+          // 其他响应类型处理
         }
+
       } catch (error) {
         console.warn('转换请求结果出错', error);
       }
@@ -58,7 +60,7 @@ export const CommonHttp = new DesonFetch({
       // 其他响应码
     }
   },
-  //错误拦截，此拦截只会在fetch请求失败的时候进行拦截也就是response.ok!==true的情况下才执行
+  //请求错误拦截，
   errInterceptor(err) {
     console.warn(err);
     Toast.show({
@@ -67,24 +69,15 @@ export const CommonHttp = new DesonFetch({
     });
   },
 });
-//构造完一个基础的请求实例，可以基于这个实例创建restful风格接口请求对象
-const PostApi = CommonHttp.create('/post'); //PostApi对象拥有post、delete、get、put、patch、getOne请求方法;
-PostApi.post(data, options); // 会发送一个post请求http://www.baidu.com/api/post，第一个参数为发送的数据，第二个参数下面说明;
-/*
- 每个请求都有的options参数，这是一个可选参数，如果传入该参数请在请求方法的最后一个参数位传入，例如post方法在第二个参数位，put和delete方法在第三个，该参数为一个对象：
- {
- 	url:string, //如果你想发送到http://www.baidu.com/api/post/popular，url这里写popular，内部会拼接地址;
- 	ResponseType : "json" | 'stream' | 'text',//如果在构造的时候没有写响应resInterceptor拦截器，内部默认会把响应结果执行response.json()，如果传入stream会直接返回response方便用户自行处理下载等操作。
- 	headers：//请求头对象没啥好说的。
- 	fetchOptions：fetch请求参数剔除了body、method、headers选项，参考 https://developer.mozilla.org/zh-CN/docs/Web/API/fetch
-  }
+/**
+ * 创建restful风格接口请求对象
+ * PostApi对象拥有post、delete、get、put、patch请求方法;
+ * 每个请求方法接收两个参数:PostApi.[method](data?:Record<string,any>|string, option:{data?Record<string,any>; headers?: HeaderType;fetchOptions?: Omit<RequestInit, "body" | "method" | "headers">});
+ * 第一个参数可以是object或者string，第二个参数可以传入headers（object对象），和fetchOptions（fetch参数）选项;
+ * 第一个参数如果为string则视为请求url,例:PostApi.post('hot',option)会发送post请求到http://www.baidu.com/news/hot,如果需要发送请求参数则再option中传入{data:{xxx}}
+ * 第一个参数如果为object则视为请求参数,例:PostApi.get({ id:1 },option)会发送post请求到http://www.baidu.com/news?id=1,此时忽略option中的data参数
  */
-//由于每个options位于请求方法最后一个参数，如果不需要发送请求参数，但是需要定义options，请求参数位置可以传undefined
-get(params?:Record<string,string>,options?);//get请求，params参数为queryString组合对象
-getOne(id:number|string,params?:Record<string,string>,options?)
-post(data?::Record<string,any>|FormData,options) //post请求
-put(id:number|string?,data?:Record<string,any>|FormData,options?) //put请求
-patch(id:number|string?,data?:Record<string,any>|FormData,options?) //patch请求
-delete(id:number|string?,data?:Record<string,any>|FormData,options?) //delete请求
+const PostApi = CommonHttp.create('/news');
+
 ```
 

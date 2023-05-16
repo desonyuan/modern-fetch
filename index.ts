@@ -9,15 +9,14 @@ interface IDesonFetchFactory {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
   prefix?: string,
-  resInterceptor?: (response: Response, options?: Omit<RequestOption, "data">) => Promise<any>
+  resInterceptor?: (response: Response, options?: Omit<RequestOption, "data">&{url?:string}) => Promise<any>
   errInterceptor?: (err: TypeError) => void
 }
 
 type RequestFactory = Omit<IDesonFetchFactory, "baseUrl" | "prefix"> & { url: string }
 // 发起实例请求方法参数类型
-type RequestOption = Omit<Partial<RequestFactory>, "resInterceptor" | "errInterceptor"> & { responseType?: ResponseType,url?:string }
-//发起fetch请求函数参数类型
-type IFetchParam = Omit<RequestOption, "url"> & { data?: DataType }
+type RequestOption = Omit<IDesonFetchFactory, "resInterceptor" | "errInterceptor"|"baseUrl" | "prefix"> & { responseType?: ResponseType,data?:DataType }
+
 /**
  * 删除字符串两边的'/'
  * @param str string
@@ -48,8 +47,8 @@ class Request {
     this.fetchOptions = fetchOptions;
     this.url = url ?? '';
   }
-  // 发送请求
-  private async fetch(url: string, method: Methods, options: IFetchParam): Promise<any> {
+  // 请求方法
+  private async fetch(url: string, method: Methods, options: RequestOption): Promise<any> {
     method = method.toUpperCase() as Methods;
 
     const { data, headers, responseType, fetchOptions } = options;
@@ -110,14 +109,18 @@ class Request {
           headers: assignHeader, responseType, fetchOptions: _fetchOptions, url,
         })
       } else {
-        switch (responseType) {
-          case undefined:
-          case "json":
-            return await response.json()
-          case "text":
-            return await response.text()
-          case "stream":
-            return response
+        if(response.ok){
+          switch (responseType) {
+            case undefined:
+            case "json":
+              return await response.json()
+            case "text":
+              return await response.text()
+            case "stream":
+              return response
+          }
+        }else{
+          return Promise.reject(response)
         }
       }
     } catch (err) {
@@ -129,95 +132,65 @@ class Request {
     }
 
   }
+  // 发送请求
+  private send(method: Methods,data?: DataType|string, dataAndOptions: RequestOption={}){
+    let url=this.url;
+    let body:RequestOption=dataAndOptions;
+    if(data){
+      if(typeof data==="string"){
+        url+=removeSlash(data);
+      }else if(typeof data=="object" ){
+        if(method==="GET"){
+          url += '?' + new URLSearchParams(data)
+        }else{
+          body={data}
+        }
+      }
+    }
+    return this.fetch(url, method, body);
+  }
   /**
    * post请求
-   * @param data 字段内容
+   * @param data 请求体或者请求url
    * @returns
    */
-  post<R>(data?: DataType, reqOption: RequestOption = {}): Promise<R> {
-    const { url: reqUrl, ...reqParam } = reqOption;
-    const url = reqUrl ?`${this.url}/${removeSlash(reqUrl)}` : this.url
-    return this.fetch(url, "POST", {
-      data,
-      ...reqParam
-    });
+  post<R>(data?: DataType|string, dataAndOptions: RequestOption={}): Promise<R> {
+    return this.send("POST",data,dataAndOptions);
   }
   /**
    * 删除
    * @param id 需要删除记录的id
    * @returns
    */
-  delete<R>(id?: string | number, data?: DataType, reqOption: RequestOption = {}): Promise<R> {
-    const { url: reqUrl, ...reqParam } = reqOption;
-    const url = reqUrl ? `${this.url}/${removeSlash(reqUrl)}` : this.url;
-    return this.fetch(`${url}${id ? '/' + id : ''}`, 'DELETE', {
-      data,
-      ...reqParam
-    });
+  delete<R>(data?: DataType|string, dataAndOptions: RequestOption={}): Promise<R> {
+    return this.send("DELETE",data,dataAndOptions);
   }
   /**
    * 更新update 方法
-   * @param id 需要更新记录的id
-   * @param data 更新的新的字段对象
+   * @param data 需要更新记录的或者请求url
+   * @param dataAndOptions 请求fetch参数
    * @returns
    */
-  put<R>(id?: string | number, data?: DataType, reqOption: RequestOption = {}): Promise<R> {
-    const { url: reqUrl, ...reqParam } = reqOption;
-    const url = reqUrl ?`${this.url}/${removeSlash(reqUrl)}` : this.url;
-    return this.fetch(`${url}${id ? '/' + id : ''}`, "PUT", {
-      data,
-      ...reqParam
-    });
+  put<R>(data?: DataType|string, dataAndOptions: RequestOption={}): Promise<R> {
+    return this.send("PUT",data,dataAndOptions);
   }
   /**
- * 更新patch 方法
- * @param id 需要更新记录的id
- * @param data 更新的新的字段对象
- * @returns
- */
-  patch<R>(id?: string | number, data?: DataType, reqOption: RequestOption = {}): Promise<R> {
-    const { url: reqUrl, ...reqParam } = reqOption;
-    let url = reqUrl ?`${this.url}/${removeSlash(reqUrl)}` : this.url;
-    return this.fetch(`${url}${id ? '/' + id : ''}`, "PATCH", {
-      data,
-      ...reqParam
-    });
+  /**
+   * 更新patch 方法
+   * @param data 需要更新记录的或者请求url
+   * @param dataAndOptions 请求fetch参数
+   * @returns
+   */
+  patch<R>(data?: DataType|string, dataAndOptions: RequestOption={}): Promise<R> {
+    return this.send("PATCH",data,dataAndOptions);
   }
   /**
    * 条件查询
    * @param params 查询的条件参数
    * @returns
    */
-  get<R>(params?: DataType|string,reqOption: RequestOption={}): Promise<R> {
-    const { url: reqUrl,  ...reqParam } = reqOption;
-    // let url = reqUrl ?`${this.url}/${removeSlash(reqUrl)}` : this.url;
-    let url=this.url;
-    if(reqUrl){
-      url+=`/${removeSlash(reqUrl)}`
-    }
-    if(typeof params==="string"){
-      url+=removeSlash(params);
-    }else if(typeof params=="object" ){
-      // 拼接get方法请求参数
-      url += '?' + new URLSearchParams(params)
-    }
-    return this.fetch(url, 'GET', reqParam);
-  }
-  /**
-   * 查询一个
-   * @param id 记录id
-   * @returns
-   */
-  getOne<R>(id?: number | string,params?:DataType, reqOption: RequestOption = {}): Promise<R> {
-    // 拼接get方法请求参数
-    const { url: reqUrl, ...reqParam } = reqOption;
-    let url = reqUrl ?`${this.url}/${removeSlash(reqUrl)}` : this.url;
-    id?url += `/${id}`:undefined;
-    // 拼接get方法请求参数
-    if (params) {
-      url += '?' + new URLSearchParams(params)
-    }
-    return this.fetch(url, 'GET', reqParam);
+  get<R>(data?: DataType|string, dataAndOptions: RequestOption={}): Promise<R> {
+    return this.send("GET",data,dataAndOptions);
   }
 }
 /**
@@ -231,9 +204,9 @@ export class DesonFetch {
    * @param url string request url
    * @returns Request
    */
-  create(url: string) {
+  create(url='') {
     const { baseUrl, prefix, ...props } = this.options;
-    const _url=url?`/${removeSlash(url)}`:'';
+    const _url=`/${removeSlash(url)}`;
     let str = '';
     if (prefix) {
       if (baseUrl) {

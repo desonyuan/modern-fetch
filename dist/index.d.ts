@@ -7,15 +7,17 @@ interface IDesonFetchFactory {
     headers?: HeaderType;
     fetchOptions?: IFetchOption;
     prefix?: string;
-    resInterceptor?: (response: Response, options?: Omit<RequestOption, "data">) => Promise<any>;
+    resInterceptor?: (response: Response, options?: Omit<RequestOption, "data"> & {
+        url?: string;
+    }) => Promise<any>;
     errInterceptor?: (err: TypeError) => void;
 }
 type RequestFactory = Omit<IDesonFetchFactory, "baseUrl" | "prefix"> & {
     url: string;
 };
-type RequestOption = Omit<Partial<RequestFactory>, "resInterceptor" | "errInterceptor"> & {
+type RequestOption = Omit<IDesonFetchFactory, "resInterceptor" | "errInterceptor" | "baseUrl" | "prefix"> & {
     responseType?: ResponseType;
-    url?: string;
+    data?: DataType;
 };
 /**
  *fetch原生请求 用于不做任何包装的fetch请求
@@ -29,44 +31,40 @@ declare class Request {
     private readonly url;
     constructor(options: RequestFactory);
     private fetch;
+    private send;
     /**
      * post请求
-     * @param data 字段内容
+     * @param data 请求体或者请求url
      * @returns
      */
-    post<R>(data?: DataType, reqOption?: RequestOption): Promise<R>;
+    post<R>(data?: DataType | string, dataAndOptions?: RequestOption): Promise<R>;
     /**
      * 删除
      * @param id 需要删除记录的id
      * @returns
      */
-    delete<R>(id?: string | number, data?: DataType, reqOption?: RequestOption): Promise<R>;
+    delete<R>(data?: DataType | string, dataAndOptions?: RequestOption): Promise<R>;
     /**
      * 更新update 方法
-     * @param id 需要更新记录的id
-     * @param data 更新的新的字段对象
+     * @param data 需要更新记录的或者请求url
+     * @param dataAndOptions 请求fetch参数
      * @returns
      */
-    put<R>(id?: string | number, data?: DataType, reqOption?: RequestOption): Promise<R>;
+    put<R>(data?: DataType | string, dataAndOptions?: RequestOption): Promise<R>;
     /**
-   * 更新patch 方法
-   * @param id 需要更新记录的id
-   * @param data 更新的新的字段对象
-   * @returns
-   */
-    patch<R>(id?: string | number, data?: DataType, reqOption?: RequestOption): Promise<R>;
+    /**
+     * 更新patch 方法
+     * @param data 需要更新记录的或者请求url
+     * @param dataAndOptions 请求fetch参数
+     * @returns
+     */
+    patch<R>(data?: DataType | string, dataAndOptions?: RequestOption): Promise<R>;
     /**
      * 条件查询
      * @param params 查询的条件参数
      * @returns
      */
-    get<R>(params?: DataType | string, reqOption?: RequestOption): Promise<R>;
-    /**
-     * 查询一个
-     * @param id 记录id
-     * @returns
-     */
-    getOne<R>(id?: number | string, params?: DataType, reqOption?: RequestOption): Promise<R>;
+    get<R>(data?: DataType | string, dataAndOptions?: RequestOption): Promise<R>;
 }
 /**
  * 构造DesonFetch实例，通常需要传入BaseUrl
@@ -79,6 +77,6 @@ export declare class DesonFetch {
      * @param url string request url
      * @returns Request
      */
-    create(url: string): Request;
+    create(url?: string): Request;
 }
 export {};
