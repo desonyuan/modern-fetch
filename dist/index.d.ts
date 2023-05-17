@@ -1,21 +1,31 @@
+type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE' | "HEAD";
 type DataType = Record<string, any>;
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">;
 type ResponseType = "json" | 'stream' | 'text';
 interface IDesonFetchFactory {
     baseUrl?: string;
+    prefix?: string;
     headers?: HeaderType;
     fetchOptions?: IFetchOption;
-    prefix?: string;
-    resInterceptor?: (response: Response, options?: Omit<RequestOption, "data"> & {
-        url?: string;
-    }) => Promise<any>;
+    reqInterceptor?: (config: RequestConfig) => Promise<RequestConfig>;
+    resInterceptor?: (response: Response, options?: RequestConfig) => Promise<any>;
     errInterceptor?: (err: TypeError) => void;
 }
+type RequestConfig = {
+    headers: HeaderType;
+    fetchOptions: IFetchOption;
+    responseType?: ResponseType;
+    data?: DataType;
+    url: string;
+    method: Methods;
+};
 type RequestFactory = Omit<IDesonFetchFactory, "baseUrl" | "prefix"> & {
     url: string;
 };
-type RequestOption = Omit<IDesonFetchFactory, "resInterceptor" | "errInterceptor" | "baseUrl" | "prefix"> & {
+type RequestOption = {
+    headers?: HeaderType;
+    fetchOptions?: IFetchOption;
     responseType?: ResponseType;
     data?: DataType;
 };
@@ -24,6 +34,7 @@ type RequestOption = Omit<IDesonFetchFactory, "resInterceptor" | "errInterceptor
  */
 export declare const request: (url: string, options?: RequestInit) => Promise<Response>;
 declare class Request {
+    private readonly reqInterceptor;
     private readonly resInterceptor;
     private readonly errInterceptor;
     private readonly headers;
@@ -43,14 +54,14 @@ declare class Request {
      * @param id 需要删除记录的id
      * @returns
      */
-    delete<R>(data?: DataType | string, dataAndOptions?: RequestOption): Promise<R>;
+    delete<R>(data?: DataType | string | number, dataAndOptions?: RequestOption): Promise<R>;
     /**
      * 更新update 方法
      * @param data 需要更新记录的或者请求url
      * @param dataAndOptions 请求fetch参数
      * @returns
      */
-    put<R>(data?: DataType | string, dataAndOptions?: RequestOption): Promise<R>;
+    put<R>(data?: DataType | string | number, dataAndOptions?: RequestOption): Promise<R>;
     /**
     /**
      * 更新patch 方法
@@ -58,7 +69,7 @@ declare class Request {
      * @param dataAndOptions 请求fetch参数
      * @returns
      */
-    patch<R>(data?: DataType | string, dataAndOptions?: RequestOption): Promise<R>;
+    patch<R>(data?: DataType | string | number, dataAndOptions?: RequestOption): Promise<R>;
     /**
      * 条件查询
      * @param params 查询的条件参数

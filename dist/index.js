@@ -19,9 +19,17 @@ exports.request = request;
 // 请求类/
 class Request {
     constructor(options) {
-        const { headers, resInterceptor, errInterceptor, fetchOptions, url } = options;
+        const { headers, resInterceptor, errInterceptor, reqInterceptor, fetchOptions, url } = options;
         this.resInterceptor = resInterceptor;
         this.errInterceptor = errInterceptor;
+        this.reqInterceptor = async (config) => {
+            if (reqInterceptor) {
+                return await reqInterceptor(config);
+            }
+            else {
+                return config;
+            }
+        };
         this.headers = headers;
         this.fetchOptions = fetchOptions;
         this.url = url !== null && url !== void 0 ? url : '';
@@ -29,13 +37,14 @@ class Request {
     // 请求方法
     async fetch(url, method, options) {
         method = method.toUpperCase();
-        const { data, headers, responseType, fetchOptions } = options;
+        const { data, headers, fetchOptions } = options;
         let body;
         // 合并请求头
         const assignHeader = Object.assign({}, this.headers, headers);
-        const _headers = new Headers(assignHeader);
         // 合并fetch请求参数
         const _fetchOptions = Object.assign({}, this.fetchOptions, fetchOptions);
+        const config = await this.reqInterceptor({ url, headers: assignHeader, data, fetchOptions: _fetchOptions, responseType: options.responseType, method });
+        const _headers = new Headers(config.headers);
         // 处理数据&&是否需要写contentType请求头,如果有传入content type 则不做任何处理
         const contentType = _headers.get('Content-Type');
         if (method === "GET" || method === "HEAD") {
@@ -82,21 +91,19 @@ class Request {
         }
         // 发送请求
         try {
-            const response = await (0, exports.request)(url, {
+            const response = await (0, exports.request)(config.url, {
                 headers: _headers,
                 method,
                 body,
-                ..._fetchOptions,
+                ...config.fetchOptions,
             });
             // 有拦截器，执行拦截器
             if (this.resInterceptor) {
-                return await this.resInterceptor(response, {
-                    headers: assignHeader, responseType, fetchOptions: _fetchOptions, url,
-                });
+                return await this.resInterceptor(response, config);
             }
             else {
                 if (response.ok) {
-                    switch (responseType) {
+                    switch (config.responseType) {
                         case undefined:
                         case "json":
                             return await response.json();
@@ -125,8 +132,8 @@ class Request {
         let url = this.url;
         let body = dataAndOptions;
         if (data) {
-            if (typeof data === "string") {
-                url += removeSlash(data);
+            if (typeof data === "string" || typeof data === "number") {
+                url += `/${removeSlash(data + '')}`;
                 if (body.data) {
                     url += '?' + new URLSearchParams(body.data);
                 }
@@ -200,7 +207,7 @@ class DesonFetch {
      */
     create(url = '') {
         const { baseUrl, prefix, ...props } = this.options;
-        const _url = `/${removeSlash(url)}`;
+        let _url = url === '' ? url : `/${removeSlash(url)}`;
         let str = '';
         if (prefix) {
             if (baseUrl) {

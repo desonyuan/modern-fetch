@@ -20,7 +20,13 @@ interface ResponseStructure {
   data: any;
   message: string;
 }
-
+//类型定义
+type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE' | "HEAD";
+type DataType = Record<string, any> | FormData;
+type HeaderType = Record<string, string>;
+type IFetchOption = Omit<RequestInit, "body" | "method" | "headers"> //fetch 请求参数去除 "body" | "method" | "headers"
+type ResponseType = "json" | 'stream' | 'text'
+type RequestConfig={  headers: HeaderType ;fetchOptions: IFetchOption; responseType: ResponseType,data?:DataType;url:string,method:Methods }
 //构造一个实例对象 构造参数内的选项均为可选参数
 export const CommonHttp = new DesonFetch({
   baseUrl: 'http://www.baidu.com',//该实例的请求地址
@@ -29,6 +35,15 @@ export const CommonHttp = new DesonFetch({
     mode: 'cors',
     credentials: 'include',
   },
+  /*
+   *请求拦截器，每次发送请求都会执行该函数,常用修改请求参数
+   *@return RequestConfig
+  */
+ async resInterceptor(config:RequestConfig){
+  config.headers.authorization=token;
+  return config
+ }
+
   /* 响应拦截器
   *如果不传此函数，默认请求参数options中没有responseType或者responseType等于json的时候会执行 await response.json()
   *建议传此函数自行处理响应结果。
