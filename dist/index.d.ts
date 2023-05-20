@@ -48,7 +48,7 @@ declare class Request {
      * @param data 请求体或者请求url
      * @returns
      */
-    post<R>(data?: DataType | string, dataAndOptions?: RequestOption): Promise<R>;
+    post<R>(data?: DataType | string | number, dataAndOptions?: RequestOption): Promise<R>;
     /**
      * 删除
      * @param id 需要删除记录的id
@@ -75,7 +75,7 @@ declare class Request {
      * @param params 查询的条件参数
      * @returns
      */
-    get<R>(data?: DataType | string, dataAndOptions?: RequestOption): Promise<R>;
+    get<R>(data?: DataType | string | number, dataAndOptions?: RequestOption): Promise<R>;
 }
 /**
  * 构造DesonFetch实例，通常需要传入BaseUrl

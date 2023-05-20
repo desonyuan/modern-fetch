@@ -167,7 +167,7 @@ class Request {
    * @param data 请求体或者请求url
    * @returns
    */
-  post<R>(data?: DataType|string, dataAndOptions: RequestOption={}): Promise<R> {
+  post<R>(data?: DataType|string|number, dataAndOptions: RequestOption={}): Promise<R> {
     return this.send("POST",data,dataAndOptions);
   }
   /**
@@ -202,7 +202,7 @@ class Request {
    * @param params 查询的条件参数
    * @returns
    */
-  get<R>(data?: DataType|string, dataAndOptions: RequestOption={}): Promise<R> {
+  get<R>(data?: DataType|string|number, dataAndOptions: RequestOption={}): Promise<R> {
     return this.send("GET",data,dataAndOptions);
   }
 }
