@@ -3,7 +3,7 @@ type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE' | "HEAD";
 type DataType = Record<string, any>;
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">
-type ResponseType = "json" | 'stream' | 'text'
+type ResponseType = "json" | 'text' | 'formData' | 'blob' | 'arrayBuffer'
 interface IDesonFetchFactory {
   baseUrl?: string;
   prefix?: string,
@@ -13,11 +13,11 @@ interface IDesonFetchFactory {
   resInterceptor?: (response: Response, options?: RequestConfig) => Promise<any>
   errInterceptor?: (err: TypeError) => void
 }
-type RequestConfig={headers: HeaderType;fetchOptions: IFetchOption; responseType?: ResponseType,data?:DataType;url:string,method:Methods}
+type RequestConfig = { headers: HeaderType; fetchOptions: IFetchOption; responseType?: ResponseType, data?: DataType; url: string, method: Methods }
 
 type RequestFactory = Omit<IDesonFetchFactory, "baseUrl" | "prefix"> & { url: string }
 // 发起实例请求方法参数类型
-type RequestOption = {  headers?: HeaderType ;fetchOptions?: IFetchOption; responseType?: ResponseType,data?:DataType }
+type RequestOption = { headers?: HeaderType; fetchOptions?: IFetchOption; responseType?: ResponseType, data?: DataType }
 
 /**
  * 删除字符串两边的'/'
@@ -44,13 +44,13 @@ class Request {
   private readonly url: string
 
   constructor(options: RequestFactory) {
-    const { headers, resInterceptor, errInterceptor,reqInterceptor, fetchOptions, url } = options;
+    const { headers, resInterceptor, errInterceptor, reqInterceptor, fetchOptions, url } = options;
     this.resInterceptor = resInterceptor;
     this.errInterceptor = errInterceptor;
-    this.reqInterceptor=async (config)=>{
-      if(reqInterceptor){
+    this.reqInterceptor = async (config) => {
+      if (reqInterceptor) {
         return await reqInterceptor(config)
-      }else{
+      } else {
         return config
       }
     }
@@ -67,7 +67,7 @@ class Request {
     const assignHeader = Object.assign({}, this.headers, headers);
     // 合并fetch请求参数
     const _fetchOptions = Object.assign({}, this.fetchOptions, fetchOptions);
-    const config=await this.reqInterceptor!({url,headers:assignHeader,data,fetchOptions:_fetchOptions,responseType:options.responseType,method})
+    const config = await this.reqInterceptor!({ url, headers: assignHeader, data, fetchOptions: _fetchOptions, responseType: options.responseType, method })
     const _headers = new Headers(config.headers);
     // 处理数据&&是否需要写contentType请求头,如果有传入content type 则不做任何处理
     const contentType = _headers.get('Content-Type');
@@ -79,7 +79,7 @@ class Request {
       if (data) {
         if (FormData && data instanceof FormData) {
           body = data;
-        }else{
+        } else {
           if (!contentType) {
             if (typeof data === 'object') {
               _headers.append("Content-type", 'application/json;charset=utf-8')
@@ -119,44 +119,52 @@ class Request {
       if (this.resInterceptor) {
         return await this.resInterceptor(response, config)
       } else {
-        if(response.ok){
-          switch (config.responseType) {
-            case undefined:
-            case "json":
-              return await response.json()
-            case "text":
-              return await response.text()
-            case "stream":
-              return response
+        if (response.ok) {
+          try {
+            switch (config.responseType) {
+              case undefined:
+              case "json":
+                return await response.json()
+              case "text":
+                return await response.text()
+              case "blob":
+                return await response.blob()
+              case "formData":
+                return await response.formData()
+              case "arrayBuffer":
+                return await response.arrayBuffer()
+            }
+          } catch (error) {
+            return Promise.reject(error)
           }
-        }else{
+        } else {
           return Promise.reject(response)
         }
       }
     } catch (err) {
       if (this.errInterceptor) {
         return this.errInterceptor(err as TypeError)
-      }else{
-       return Promise.reject(err)
+      } else {
+        return Promise.reject(err)
       }
     }
 
   }
   // 发送请求
-  private send(method: Methods,data?: DataType|string|number, dataAndOptions: RequestOption={}){
-    let url=this.url;
-    let body:RequestOption=dataAndOptions;
-    if(data){
-      if(typeof data==="string"||typeof data==="number"){
-        url+=`/${removeSlash(data+'')}`;
-        if(body.data){
+  private send(method: Methods, data?: DataType | string | number, dataAndOptions: RequestOption = {}) {
+    let url = this.url;
+    let body: RequestOption = dataAndOptions;
+    if (data) {
+      if (typeof data === "string" || typeof data === "number") {
+        url += `/${removeSlash(data + '')}`;
+        if (body.data) {
           url += '?' + new URLSearchParams(body.data)
         }
-      }else if(typeof data=="object" ){
-        if(method==="GET"){
+      } else if (typeof data == "object") {
+        if (method === "GET") {
           url += '?' + new URLSearchParams(data)
-        }else{
-          body.data=data
+        } else {
+          body.data = data
         }
       }
     }
@@ -167,16 +175,16 @@ class Request {
    * @param data 请求体或者请求url
    * @returns
    */
-  post<R>(data?: DataType|string|number, dataAndOptions: RequestOption={}): Promise<R> {
-    return this.send("POST",data,dataAndOptions);
+  post<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
+    return this.send("POST", data, dataAndOptions);
   }
   /**
    * 删除
    * @param id 需要删除记录的id
    * @returns
    */
-  delete<R>(data?: DataType|string|number, dataAndOptions: RequestOption={}): Promise<R> {
-    return this.send("DELETE",data,dataAndOptions);
+  delete<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
+    return this.send("DELETE", data, dataAndOptions);
   }
   /**
    * 更新update 方法
@@ -184,8 +192,8 @@ class Request {
    * @param dataAndOptions 请求fetch参数
    * @returns
    */
-  put<R>(data?: DataType|string|number, dataAndOptions: RequestOption={}): Promise<R> {
-    return this.send("PUT",data,dataAndOptions);
+  put<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
+    return this.send("PUT", data, dataAndOptions);
   }
   /**
   /**
@@ -194,16 +202,16 @@ class Request {
    * @param dataAndOptions 请求fetch参数
    * @returns
    */
-  patch<R>(data?: DataType|string|number, dataAndOptions: RequestOption={}): Promise<R> {
-    return this.send("PATCH",data,dataAndOptions);
+  patch<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
+    return this.send("PATCH", data, dataAndOptions);
   }
   /**
    * 条件查询
    * @param params 查询的条件参数
    * @returns
    */
-  get<R>(data?: DataType|string|number, dataAndOptions: RequestOption={}): Promise<R> {
-    return this.send("GET",data,dataAndOptions);
+  get<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
+    return this.send("GET", data, dataAndOptions);
   }
 }
 /**
@@ -217,9 +225,9 @@ export class DesonFetch {
    * @param url string request url
    * @returns Request
    */
-  create(url='') {
+  create(url = '') {
     const { baseUrl, prefix, ...props } = this.options;
-    let _url=url===''?url:`/${removeSlash(url)}`;
+    let _url = url === '' ? url : `/${removeSlash(url)}`;
     let str = '';
     if (prefix) {
       if (baseUrl) {
