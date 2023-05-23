@@ -25,7 +25,7 @@ type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE' | "HEAD";
 type DataType = Record<string, any> | FormData;
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers"> //fetch 请求参数去除 "body" | "method" | "headers"
-type ResponseType = "json" | 'stream' | 'text'
+type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"
 type RequestConfig={  headers: HeaderType ;fetchOptions: IFetchOption; responseType: ResponseType,data?:DataType;url:string,method:Methods }
 //构造一个实例对象 构造参数内的选项均为可选参数
 export const CommonHttp = new DesonFetch({

@@ -3,7 +3,7 @@ type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE' | "HEAD";
 type DataType = Record<string, any>;
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">
-type ResponseType = "json" | 'text' | 'formData' | 'blob' | 'arrayBuffer'
+type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"
 interface IDesonFetchFactory {
   baseUrl?: string;
   prefix?: string,
