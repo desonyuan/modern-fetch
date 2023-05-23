@@ -103,14 +103,23 @@ class Request {
             }
             else {
                 if (response.ok) {
-                    switch (config.responseType) {
-                        case undefined:
-                        case "json":
-                            return await response.json();
-                        case "text":
-                            return await response.text();
-                        case "stream":
-                            return response;
+                    try {
+                        switch (config.responseType) {
+                            case undefined:
+                            case "json":
+                                return await response.json();
+                            case "text":
+                                return await response.text();
+                            case "blob":
+                                return await response.blob();
+                            case "formData":
+                                return await response.formData();
+                            case "arrayBuffer":
+                                return await response.arrayBuffer();
+                        }
+                    }
+                    catch (error) {
+                        return Promise.reject(error);
                     }
                 }
                 else {
