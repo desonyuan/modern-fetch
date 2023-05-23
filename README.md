@@ -90,7 +90,7 @@ export const CommonHttp = new DesonFetch({
  * 每个请求方法接收两个参数:PostApi.[method](data?:Record<string,any>|string, option:{data?Record<string,any>; headers?: HeaderType;fetchOptions?: Omit<RequestInit, "body" | "method" | "headers">});
  * 第一个参数可以是object或者string，第二个参数可以传入headers（object对象），和fetchOptions（fetch参数）选项;
  * 第一个参数如果为string则视为请求url,例:PostApi.post('hot',option)会发送post请求到http://www.baidu.com/news/hot,如果需要发送请求参数则再option中传入{data:{xxx}}
- * 第一个参数如果为object则视为请求参数,例:PostApi.get({ id:1 },option)会发送post请求到http://www.baidu.com/news?id=1,此时忽略option中的data参数
+ * 第一个参数如果为object则视为请求参数(此时忽略options中的data参数),例:PostApi.get({ id:1 },option)会发送post请求到http://www.baidu.com/news?id=1,
  */
 const PostApi = CommonHttp.create('/news');
 
