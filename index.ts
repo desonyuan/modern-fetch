@@ -117,7 +117,11 @@ class Request {
       })
       // 有拦截器，执行拦截器
       if (this.resInterceptor) {
-        return await this.resInterceptor(response, config)
+        try {
+          return await this.resInterceptor(response, config)
+        } catch (error) {
+          return Promise.reject(error)
+        }
       } else {
         if (response.ok) {
           try {

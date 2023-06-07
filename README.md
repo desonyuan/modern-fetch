@@ -1,6 +1,6 @@
 # 使用说明
 
-DesonFeth是一款基于fetch api 轻封装的http请求库，封装了一些restful api请求的常用方法，没有任何其他依赖，源码也易懂，完全是我个人的风格习惯。
+DesonFeth是一款基于fetch api 轻封装的http请求库，封装了一些restful api请求的常用方法，没有任何其他依赖，源码也易懂，完全是我个人的风格习惯,适用于browser、nodejs>=18、bun、deno、react native。
 
 ### 安装npm包
 
@@ -52,8 +52,7 @@ export const CommonHttp = new DesonFetch({
     const { responseType } = options!;
     // 请求成功示例
     if (response.ok) {
-      try {
-        if(!responseType||responseType==="json"){
+       if(!responseType||responseType==="json"){
             const resData: ResponseStructure = await response.json();
             const { statusCode, data, message } = resData;
             if (statusCode === 200) {
@@ -63,25 +62,22 @@ export const CommonHttp = new DesonFetch({
                 icon: 'fail',
                 content: message,
               });
+              return Promise.reject()
             }
         }else{
           // 其他响应类型处理
         }
-
-      } catch (error) {
-        console.warn('转换请求结果出错', error);
-      }
     } else {
-      // 其他响应码
+      return Promise.reject();
     }
   },
   //请求错误拦截，
   errInterceptor(err) {
-    console.warn(err);
     Toast.show({
       icon: 'fail',
       content: err.message,
     });
+    return Promise.reject()
   },
 });
 /**
