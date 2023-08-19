@@ -36,7 +36,7 @@ export const CommonHttp = new DesonFetch({
     credentials: 'include',
   },
   /*
-   *请求拦截器，每次发送请求都会执行该函数,常用修改请求参数
+   *请求拦截器，每次发送请求都会执行该函数,常用修改请求配置参数，例如修改请求头
    *@return RequestConfig
   */
  async resInterceptor(config:RequestConfig){
@@ -85,10 +85,20 @@ export const CommonHttp = new DesonFetch({
  * PostApi对象拥有post、delete、get、put、patch请求方法;
  * 每个请求方法接收两个参数:PostApi.[method](data?:Record<string,any>|string, option:{data?Record<string,any>; headers?: HeaderType;fetchOptions?: Omit<RequestInit, "body" | "method" | "headers">});
  * 第一个参数可以是object或者string，第二个参数可以传入headers（object对象），和fetchOptions（fetch参数）选项;
- * 第一个参数如果为string则视为请求url,例:PostApi.post('hot',option)会发送post请求到http://www.baidu.com/news/hot,如果需要发送请求参数则再option中传入{data:{xxx}}
+ * 第一个参数如果为string则视为请求url,例:PostApi.post('hot',option)会发送post请求到http://www.baidu.com/news/hot,如果需要发送请求参数则在option中传入{data:{xxx}}
  * 第一个参数如果为object则视为请求参数(此时忽略options中的data参数),例:PostApi.get({ id:1 },option)会发送post请求到http://www.baidu.com/news?id=1,
  */
+
+//基于上面创建的CommonHttp实例创建一个请求对象
 const PostApi = CommonHttp.create('/news');
 
+//示例1：发送get请求 http://www.baidu.com/api/news
+PostApi.get()
+//示例2：发送get请求携带id参数， http://www.baidu.com/api/news?id=1
+PostApi.get({id: 1})
+//示例3：发送get请求news/hot并携带id参数， http://www.baidu.com/api/news/hot?id=1
+PostApi.get('hot',{data:{id: 1}})
+//其他请求方法使用同上
 ```
+
 

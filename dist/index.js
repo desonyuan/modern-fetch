@@ -103,28 +103,23 @@ class Request {
                     return await this.resInterceptor(response, config);
                 }
                 catch (error) {
-                    return Promise.reject(error);
+                    return error;
                 }
             }
             else {
                 if (response.ok) {
-                    try {
-                        switch (config.responseType) {
-                            case undefined:
-                            case "json":
-                                return await response.json();
-                            case "text":
-                                return await response.text();
-                            case "blob":
-                                return await response.blob();
-                            case "formData":
-                                return await response.formData();
-                            case "arrayBuffer":
-                                return await response.arrayBuffer();
-                        }
-                    }
-                    catch (error) {
-                        return Promise.reject(error);
+                    switch (config.responseType) {
+                        case undefined:
+                        case "json":
+                            return await response.json();
+                        case "text":
+                            return await response.text();
+                        case "blob":
+                            return await response.blob();
+                        case "formData":
+                            return await response.formData();
+                        case "arrayBuffer":
+                            return await response.arrayBuffer();
                     }
                 }
                 else {
@@ -136,9 +131,7 @@ class Request {
             if (this.errInterceptor) {
                 return this.errInterceptor(err);
             }
-            else {
-                return Promise.reject(err);
-            }
+            return Promise.reject(err);
         }
     }
     // 发送请求
