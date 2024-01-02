@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DesonFetch = exports.request = void 0;
+exports.RestfulFetch = exports.request = void 0;
 /**
  * 删除字符串两边的'/'
  * @param str string
@@ -32,7 +32,7 @@ class Request {
         };
         this.headers = headers;
         this.fetchOptions = fetchOptions;
-        this.url = url !== null && url !== void 0 ? url : '';
+        this.url = url;
     }
     // 请求方法
     async fetch(url, method, options) {
@@ -65,7 +65,6 @@ class Request {
                                 body = JSON.stringify(data);
                             }
                             catch (error) {
-                                console.log(error, '------DesonFetch');
                                 return Promise.reject(error);
                             }
                         }
@@ -76,7 +75,6 @@ class Request {
                                 body = JSON.stringify(data);
                             }
                             catch (error) {
-                                console.log(error, '------DesonFetch');
                                 return Promise.reject(error);
                             }
                         }
@@ -142,12 +140,15 @@ class Request {
             if (typeof data === "string" || typeof data === "number") {
                 url += `/${removeSlash(data + '')}`;
                 if (body.data) {
-                    url += '?' + new URLSearchParams(body.data);
+                    if (method === "GET") {
+                        url += '?' + new URLSearchParams(body.data).toString();
+                        delete body.data;
+                    }
                 }
             }
             else if (typeof data == "object") {
                 if (method === "GET") {
-                    url += '?' + new URLSearchParams(data);
+                    url += '?' + new URLSearchParams(data).toString();
                 }
                 else {
                     body.data = data;
@@ -158,7 +159,8 @@ class Request {
     }
     /**
      * post请求
-     * @param data 请求体或者请求url
+     * @param {string|object} data - 请求体或者请求url
+     * @param {object} dataAndOptions - 请求fetch参数
      * @returns
      */
     post(data, dataAndOptions = {}) {
@@ -166,7 +168,8 @@ class Request {
     }
     /**
      * 删除
-     * @param id 需要删除记录的id
+     * @param {string|object} data - 需要删除记录的id
+     * @param {object} dataAndOptions - 请求fetch参数
      * @returns
      */
     delete(data, dataAndOptions = {}) {
@@ -174,8 +177,8 @@ class Request {
     }
     /**
      * 更新update 方法
-     * @param data 需要更新记录的或者请求url
-     * @param dataAndOptions 请求fetch参数
+     * @param {string|object} data - 需要更新记录的或者请求url
+     * @param {object} dataAndOptions - 请求fetch参数
      * @returns
      */
     put(data, dataAndOptions = {}) {
@@ -184,8 +187,8 @@ class Request {
     /**
     /**
      * 更新patch 方法
-     * @param data 需要更新记录的或者请求url
-     * @param dataAndOptions 请求fetch参数
+     * @param {string|object} data - 需要更新记录的或者请求url
+     * @param {object} dataAndOptions - 请求fetch参数
      * @returns
      */
     patch(data, dataAndOptions = {}) {
@@ -193,7 +196,8 @@ class Request {
     }
     /**
      * 条件查询
-     * @param params 查询的条件参数
+     * @param {string|object} data 查询的条件参数
+     * @param {object} dataAndOptions - 请求fetch参数
      * @returns
      */
     get(data, dataAndOptions = {}) {
@@ -201,38 +205,34 @@ class Request {
     }
 }
 /**
- * 构造DesonFetch实例，通常需要传入BaseUrl
+ * 构造RestfulFetch实例，通常需要传入BaseUrl
  */
-class DesonFetch {
+class RestfulFetch {
     constructor(options = {}) {
         this.options = options;
     }
     /**
-     * 创建基于DesonFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
-     * @param url string request url
-     * @returns Request
+     * 创建基于RestfulFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
+     * @param url 请求url
+     * @returns Request 实例
      */
-    create(url = '') {
+    create(url = '/') {
         const { baseUrl, prefix, ...props } = this.options;
-        let _url = url === '' ? url : `/${removeSlash(url)}`;
-        let str = '';
+        url = removeSlash(url);
         if (prefix) {
             if (baseUrl) {
-                str = `${removeSlash(baseUrl)}/${removeSlash(prefix)}${_url}`;
+                url = `${removeSlash(baseUrl)}/${removeSlash(prefix)}/${url}`;
             }
             else {
-                str = `/${removeSlash(prefix)}${_url}`;
+                url = `/${removeSlash(prefix)}/${url}`;
             }
         }
         else {
             if (baseUrl) {
-                str = `${removeSlash(baseUrl)}${_url}`;
-            }
-            else {
-                str = _url;
+                url = `${removeSlash(baseUrl)}/${url}`;
             }
         }
-        return new Request({ url: str, ...props });
+        return new Request({ url, ...props });
     }
 }
-exports.DesonFetch = DesonFetch;
+exports.RestfulFetch = RestfulFetch;

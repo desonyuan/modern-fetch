@@ -12,7 +12,7 @@ npm install @deson/fetch --save
 
 ```typescript
 //使用示例
-import { DesonFetch } from '@deson/fetch';
+import { RestfulFetch } from '@deson/fetch';
 
 //与后端约定的响应格式
 interface ResponseStructure {
