@@ -216,20 +216,19 @@ class RestfulFetch {
      * @param url 请求url
      * @returns Request 实例
      */
-    create(url = '/') {
+    create(url = '') {
         const { baseUrl, prefix, ...props } = this.options;
-        url = removeSlash(url);
         if (prefix) {
             if (baseUrl) {
-                url = `${removeSlash(baseUrl)}/${removeSlash(prefix)}/${url}`;
+                url = `${removeSlash(baseUrl)}/${removeSlash(prefix)}${url}`;
             }
             else {
-                url = `/${removeSlash(prefix)}/${url}`;
+                url = `/${removeSlash(prefix)}${url}`;
             }
         }
         else {
             if (baseUrl) {
-                url = `${removeSlash(baseUrl)}/${url}`;
+                url = `${removeSlash(baseUrl)}${url}`;
             }
         }
         return new Request({ url, ...props });

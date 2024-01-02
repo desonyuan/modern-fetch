@@ -118,11 +118,7 @@ class Request {
       })
       // 有拦截器，执行拦截器
       if (this.resInterceptor) {
-        try {
-          return await this.resInterceptor(response, config)
-        } catch (error) {
-          return error
-        }
+        return await this.resInterceptor(response, config)
       } else {
         if (response.ok) {
           switch (config.responseType) {
@@ -144,7 +140,7 @@ class Request {
       }
     } catch (err) {
       if (this.errInterceptor) {
-        return this.errInterceptor(err as TypeError)
+        this.errInterceptor(err as TypeError)
       }
       return Promise.reject(err)
     }
@@ -232,18 +228,17 @@ export class RestfulFetch {
    * @param url 请求url
    * @returns Request 实例
    */
-  create(url='/') {
+  create(url='') {
     const { baseUrl, prefix, ...props } = this.options;
-    url=removeSlash(url)
     if (prefix) {
       if (baseUrl) {
-        url = `${removeSlash(baseUrl)}/${removeSlash(prefix)}/${url}`;
+        url = `${removeSlash(baseUrl)}/${removeSlash(prefix)}${url}`;
       } else {
-        url = `/${removeSlash(prefix)}/${url}`;
+        url = `/${removeSlash(prefix)}${url}`;
       }
     } else {
       if (baseUrl) {
-        url = `${removeSlash(baseUrl)}/${url}`;
+        url = `${removeSlash(baseUrl)}${url}`;
       }
     }
 

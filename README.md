@@ -31,7 +31,7 @@ type RequestConfig={  headers: HeaderType ;fetchOptions: IFetchOption; responseT
 //构造基础实例对象 构造参数内的选项均为可选参数
 export const CommonHttp = new DesonFetch({
   baseUrl: 'http://www.baidu.com',//该实例的请求地址
-  prefix: 'api', //请求前缀，为了统一所有请求前缀，默认进行了前后去"/"处理，也就是说你传入/api 和/api/ 最终结果是一样的；
+  prefix: 'api', //请求前缀
   fetchOptions: {//原生fetch 剔除body、method、headers选项。 Omit<RequestInit, "body" | "method" | "headers">
     mode: 'cors',
     credentials: 'include',
