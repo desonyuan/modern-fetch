@@ -4,9 +4,13 @@ type DataType = Record<string, any>;
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">
 type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"
-interface IDesonFetchFactory {
+
+type RestfulFetchFactoryBaseUrl = {
   baseUrl?: string;
   prefix?: string,
+}
+
+interface IRestfulFetchFactoryConfig {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
   reqInterceptor?: (config: RequestConfig) => Promise<RequestConfig>
@@ -15,7 +19,7 @@ interface IDesonFetchFactory {
 }
 type RequestConfig = { headers: HeaderType; fetchOptions: IFetchOption; responseType?: ResponseType, data?: DataType; url: string, method: Methods }
 
-type RequestFactory = Omit<IDesonFetchFactory, "baseUrl" | "prefix"> & { url: string }
+type RequestFactory = IRestfulFetchFactoryConfig & { url: string }
 // 发起实例请求方法参数类型
 type RequestOption = { headers?: HeaderType; fetchOptions?: IFetchOption; responseType?: ResponseType, data?: DataType }
 
@@ -35,13 +39,12 @@ export const request = async (url: string, options?: RequestInit): Promise<Respo
 }
 // 请求类/
 class Request {
-
   private readonly reqInterceptor: RequestFactory["reqInterceptor"]
   private readonly resInterceptor: RequestFactory["resInterceptor"]
   private readonly errInterceptor: RequestFactory["errInterceptor"]
   private readonly headers: RequestFactory["headers"]
   private readonly fetchOptions: RequestFactory["fetchOptions"]
-  private readonly url: string
+  private readonly url!: string
 
   constructor(options: RequestFactory) {
     const { headers, resInterceptor, errInterceptor, reqInterceptor, fetchOptions, url } = options;
@@ -56,7 +59,7 @@ class Request {
     }
     this.headers = headers;
     this.fetchOptions = fetchOptions;
-    this.url = url ?? '';
+    this.url = url
   }
   // 请求方法
   private async fetch(url: string, method: Methods, options: RequestOption): Promise<any> {
@@ -86,7 +89,6 @@ class Request {
               try {
                 body = JSON.stringify(data)
               } catch (error) {
-                console.log(error, '------DesonFetch')
                 return Promise.reject(error)
               }
             }
@@ -95,7 +97,6 @@ class Request {
               try {
                 body = JSON.stringify(data)
               } catch (error) {
-                console.log(error, '------DesonFetch')
                 return Promise.reject(error)
               }
             }
@@ -120,7 +121,7 @@ class Request {
         try {
           return await this.resInterceptor(response, config)
         } catch (error) {
-         return error
+          return error
         }
       } else {
         if (response.ok) {
@@ -157,11 +158,14 @@ class Request {
       if (typeof data === "string" || typeof data === "number") {
         url += `/${removeSlash(data + '')}`;
         if (body.data) {
-          url += '?' + new URLSearchParams(body.data)
+          if(method === "GET"){
+            url += '?' + new URLSearchParams(body.data).toString();
+            delete body.data;
+          }
         }
       } else if (typeof data == "object") {
         if (method === "GET") {
-          url += '?' + new URLSearchParams(data)
+          url += '?' + new URLSearchParams(data).toString()
         } else {
           body.data = data
         }
@@ -171,7 +175,8 @@ class Request {
   }
   /**
    * post请求
-   * @param data 请求体或者请求url
+   * @param {string|object} data - 请求体或者请求url
+   * @param {object} dataAndOptions - 请求fetch参数
    * @returns
    */
   post<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
@@ -179,7 +184,8 @@ class Request {
   }
   /**
    * 删除
-   * @param id 需要删除记录的id
+   * @param {string|object} data - 需要删除记录的id
+   * @param {object} dataAndOptions - 请求fetch参数
    * @returns
    */
   delete<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
@@ -187,8 +193,8 @@ class Request {
   }
   /**
    * 更新update 方法
-   * @param data 需要更新记录的或者请求url
-   * @param dataAndOptions 请求fetch参数
+   * @param {string|object} data - 需要更新记录的或者请求url
+   * @param {object} dataAndOptions - 请求fetch参数
    * @returns
    */
   put<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
@@ -197,8 +203,8 @@ class Request {
   /**
   /**
    * 更新patch 方法
-   * @param data 需要更新记录的或者请求url
-   * @param dataAndOptions 请求fetch参数
+   * @param {string|object} data - 需要更新记录的或者请求url
+   * @param {object} dataAndOptions - 请求fetch参数
    * @returns
    */
   patch<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
@@ -206,7 +212,8 @@ class Request {
   }
   /**
    * 条件查询
-   * @param params 查询的条件参数
+   * @param {string|object} data 查询的条件参数
+   * @param {object} dataAndOptions - 请求fetch参数
    * @returns
    */
   get<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
@@ -214,33 +221,32 @@ class Request {
   }
 }
 /**
- * 构造DesonFetch实例，通常需要传入BaseUrl
+ * 构造RestfulFetch实例，通常需要传入BaseUrl
  */
-export class DesonFetch {
-  constructor(private readonly options: IDesonFetchFactory = {}) {
+export class RestfulFetch {
+  constructor(private readonly options: IRestfulFetchFactoryConfig&RestfulFetchFactoryBaseUrl = {}) {
   }
+
   /**
-   * 创建基于DesonFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
-   * @param url string request url
-   * @returns Request
+   * 创建基于RestfulFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
+   * @param url 请求url
+   * @returns Request 实例
    */
-  create(url = '') {
+  create(url='/') {
     const { baseUrl, prefix, ...props } = this.options;
-    let _url = url === '' ? url : `/${removeSlash(url)}`;
-    let str = '';
+    url=removeSlash(url)
     if (prefix) {
       if (baseUrl) {
-        str = `${removeSlash(baseUrl)}/${removeSlash(prefix)}${_url}`
+        url = `${removeSlash(baseUrl)}/${removeSlash(prefix)}/${url}`;
       } else {
-        str = `/${removeSlash(prefix)}${_url}`;
+        url = `/${removeSlash(prefix)}/${url}`;
       }
     } else {
       if (baseUrl) {
-        str = `${removeSlash(baseUrl)}${_url}`
-      } else {
-        str = _url;
+        url = `${removeSlash(baseUrl)}/${url}`;
       }
     }
-    return new Request({ url: str, ...props })
+
+    return new Request({ url, ...props });
   }
 }

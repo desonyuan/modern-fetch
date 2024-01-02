@@ -27,7 +27,8 @@ type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers"> //fetch 请求参数去除 "body" | "method" | "headers"
 type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"
 type RequestConfig={  headers: HeaderType ;fetchOptions: IFetchOption; responseType: ResponseType,data?:DataType;url:string,method:Methods }
-//构造一个实例对象 构造参数内的选项均为可选参数
+
+//构造基础实例对象 构造参数内的选项均为可选参数
 export const CommonHttp = new DesonFetch({
   baseUrl: 'http://www.baidu.com',//该实例的请求地址
   prefix: 'api', //请求前缀，为了统一所有请求前缀，默认进行了前后去"/"处理，也就是说你传入/api 和/api/ 最终结果是一样的；
