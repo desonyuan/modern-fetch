@@ -12,7 +12,7 @@ interface IRestfulFetchFactoryConfig {
     fetchOptions?: IFetchOption;
     reqInterceptor?: (config: RequestConfig) => Promise<RequestConfig>;
     resInterceptor?: (response: Response, options?: RequestConfig) => Promise<any>;
-    errInterceptor?: (err: TypeError) => void;
+    errInterceptor?: (err: any) => void;
 }
 type RequestConfig = {
     headers: HeaderType;

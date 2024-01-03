@@ -15,7 +15,7 @@ interface IRestfulFetchFactoryConfig {
   fetchOptions?: IFetchOption,
   reqInterceptor?: (config: RequestConfig) => Promise<RequestConfig>
   resInterceptor?: (response: Response, options?: RequestConfig) => Promise<any>
-  errInterceptor?: (err: TypeError) => void
+  errInterceptor?: (err: any) => void
 }
 type RequestConfig = { headers: HeaderType; fetchOptions: IFetchOption; responseType?: ResponseType, data?: DataType; url: string, method: Methods }
 
@@ -34,8 +34,8 @@ const removeSlash = (str: string) => {
 /**
  *fetch原生请求 用于不做任何包装的fetch请求
  */
-export const request = async (url: string, options?: RequestInit): Promise<Response> => {
-  return await fetch(url, options)
+export const request = (url: string, options?: RequestInit): Promise<Response> => {
+  return fetch(url, options)
 }
 // 请求类/
 class Request {
@@ -135,7 +135,9 @@ class Request {
               return await response.arrayBuffer()
           }
         } else {
-          return Promise.reject(response)
+          if (this.errInterceptor) {
+            this.errInterceptor(response as any)
+          }
         }
       }
     } catch (err) {

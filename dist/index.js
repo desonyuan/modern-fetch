@@ -12,8 +12,8 @@ const removeSlash = (str) => {
 /**
  *fetch原生请求 用于不做任何包装的fetch请求
  */
-const request = async (url, options) => {
-    return await fetch(url, options);
+const request = (url, options) => {
+    return fetch(url, options);
 };
 exports.request = request;
 // 请求类/
@@ -97,12 +97,7 @@ class Request {
             });
             // 有拦截器，执行拦截器
             if (this.resInterceptor) {
-                try {
-                    return await this.resInterceptor(response, config);
-                }
-                catch (error) {
-                    return error;
-                }
+                return await this.resInterceptor(response, config);
             }
             else {
                 if (response.ok) {
@@ -121,13 +116,15 @@ class Request {
                     }
                 }
                 else {
-                    return Promise.reject(response);
+                    if (this.errInterceptor) {
+                        this.errInterceptor(response);
+                    }
                 }
             }
         }
         catch (err) {
             if (this.errInterceptor) {
-                return this.errInterceptor(err);
+                this.errInterceptor(err);
             }
             return Promise.reject(err);
         }
