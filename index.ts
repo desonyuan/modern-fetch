@@ -1,6 +1,6 @@
 
 type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
-type DataType = RequestInit['body']&{uri?:string};
+type DataType = RequestInit['body'];
 type HeaderType = RequestInit["headers"];
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">
 type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"
