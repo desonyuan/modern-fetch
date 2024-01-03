@@ -1,13 +1,20 @@
 {
   "name": "@deson/fetch",
-  "version": "2.2.1",
+  "version": "2.2.4",
   "description": "一个基于fetch api封装的restful请求风格的简易http请求库",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "publish": "tsc&&npm publish"
   },
-  "keywords": [],
+  "keywords": [
+    "fetch",
+    "RESTful",
+    "http",
+    "request",
+    "request-promise",
+    "axios"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {

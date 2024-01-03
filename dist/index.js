@@ -97,14 +97,11 @@ class Request {
             });
             // 有拦截器，执行拦截器
             if (this.resInterceptor) {
-                return await this.resInterceptor(response, config);
+                return this.resInterceptor(response, config);
             }
             else {
                 if (response.ok) {
                     switch (config.responseType) {
-                        case undefined:
-                        case "json":
-                            return await response.json();
                         case "text":
                             return await response.text();
                         case "blob":
@@ -113,12 +110,12 @@ class Request {
                             return await response.formData();
                         case "arrayBuffer":
                             return await response.arrayBuffer();
+                        default:
+                            return await response.json();
                     }
                 }
                 else {
-                    if (this.errInterceptor) {
-                        this.errInterceptor(response);
-                    }
+                    return Promise.reject(response);
                 }
             }
         }

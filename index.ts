@@ -118,13 +118,10 @@ class Request {
       })
       // 有拦截器，执行拦截器
       if (this.resInterceptor) {
-        return await this.resInterceptor(response, config)
+        return this.resInterceptor(response, config)
       } else {
         if (response.ok) {
           switch (config.responseType) {
-            case undefined:
-            case "json":
-              return await response.json()
             case "text":
               return await response.text()
             case "blob":
@@ -133,11 +130,11 @@ class Request {
               return await response.formData()
             case "arrayBuffer":
               return await response.arrayBuffer()
+            default:
+              return await response.json()
           }
         } else {
-          if (this.errInterceptor) {
-            this.errInterceptor(response as any)
-          }
+          return Promise.reject(response)
         }
       }
     } catch (err) {
@@ -146,7 +143,6 @@ class Request {
       }
       return Promise.reject(err)
     }
-
   }
   // 发送请求
   private send(method: Methods, data?: DataType | string | number, dataAndOptions: RequestOption = {}) {
@@ -156,7 +152,7 @@ class Request {
       if (typeof data === "string" || typeof data === "number") {
         url += `/${removeSlash(data + '')}`;
         if (body.data) {
-          if(method === "GET"){
+          if (method === "GET") {
             url += '?' + new URLSearchParams(body.data).toString();
             delete body.data;
           }
@@ -222,7 +218,7 @@ class Request {
  * 构造RestfulFetch实例，通常需要传入BaseUrl
  */
 export class RestfulFetch {
-  constructor(private readonly options: IRestfulFetchFactoryConfig&RestfulFetchFactoryBaseUrl = {}) {
+  constructor(private readonly options: IRestfulFetchFactoryConfig & RestfulFetchFactoryBaseUrl = {}) {
   }
 
   /**
@@ -230,7 +226,7 @@ export class RestfulFetch {
    * @param url 请求url
    * @returns Request 实例
    */
-  create(url='') {
+  create(url = '') {
     const { baseUrl, prefix, ...props } = this.options;
     if (prefix) {
       if (baseUrl) {

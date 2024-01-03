@@ -29,7 +29,7 @@ type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"
 type RequestConfig={  headers: HeaderType ;fetchOptions: IFetchOption; responseType: ResponseType,data?:DataType;url:string,method:Methods }
 
 //构造基础实例对象 构造参数内的选项均为可选参数
-export const CommonHttp = new DesonFetch({
+export const CommonHttp = new RestfulFetch({
   baseUrl: 'http://www.baidu.com',//该实例的请求地址
   prefix: 'api', //请求前缀
   fetchOptions: {//原生fetch 剔除body、method、headers选项。 Omit<RequestInit, "body" | "method" | "headers">
@@ -72,25 +72,22 @@ export const CommonHttp = new DesonFetch({
       return Promise.reject();
     }
   },
-  //请求错误拦截，
+  //fetch错误拦截，
   errInterceptor(err) {
     Toast.show({
       icon: 'fail',
       content: err.message,
     });
-    return Promise.reject()
   },
 });
 /**
- * 创建restful风格接口请求对象
+ * 基于上面创建的CommonHttp创建restful风格接口请求对象
  * PostApi对象拥有post、delete、get、put、patch请求方法;
- * 每个请求方法接收两个参数:PostApi.[method](data?:Record<string,any>|string, option:{data?Record<string,any>; headers?: HeaderType;fetchOptions?: Omit<RequestInit, "body" | "method" | "headers">});
- * 第一个参数可以是object或者string，第二个参数可以传入headers（object对象），和fetchOptions（fetch参数）选项;
- * 第一个参数如果为string则视为请求url,例:PostApi.post('hot',option)会发送post请求到http://www.baidu.com/news/hot,如果需要发送请求参数则在option中传入{data:{xxx}}
- * 第一个参数如果为object则视为请求参数(此时忽略options中的data参数),例:PostApi.get({ id:1 },option)会发送post请求到http://www.baidu.com/news?id=1,
+ * 每个请求方法接收两个参数:PostApi.[method](data, option);
+ * 第一个参数可以是Object或者string，第二个参数Object;
+ * 第一个参数如果为Object则视为请求参数(此时忽略第二个参数中的data参数),例:PostApi.get({ id:1 },option)会发送post请求到http://www.baidu.com/news?id=1,
+ * 第一个参数如果为string则视为追加的url,例:PostApi.post('hot',option)会发送post请求到http://www.baidu.com/news/hot,如果需要发送请求参数则在第二个参数中传入{data:{xxx}}
  */
-
-//基于上面创建的CommonHttp实例创建一个请求对象
 const PostApi = CommonHttp.create('/news');
 
 //示例1：发送get请求 http://www.baidu.com/api/news
