@@ -41,7 +41,7 @@ export const request = (url: string, options?: RequestInit): Promise<Response> =
 }
 // 请求类/
 class Request {
-  private readonly reqInterceptor:RequestFactory["reqInterceptor"]
+  private readonly reqInterceptor: RequestFactory["reqInterceptor"]
   private readonly resInterceptor: RequestFactory["resInterceptor"]
   private readonly errInterceptor: RequestFactory["errInterceptor"]
   private readonly headers: RequestFactory["headers"]
@@ -63,15 +63,14 @@ class Request {
     this.fetchOptions = fetchOptions || {};
     this.url = url
   }
-  // 请求方法
-  private async request(url: string, init: RequestInit, responseType?: ResponseType): Promise<any> {
+  // 发送请求
+ private async fetch(url: string, requestInit: RequestInit, responseType?: ResponseType) {
     // 发送请求
     try {
-      const response = await fetch(url, init);
-      const _init= await this.reqInterceptor?.(init)
+      const response = await fetch(url, requestInit);
       // 有拦截器，执行拦截器
       if (this.resInterceptor) {
-        return this.resInterceptor(response, init)
+        return this.resInterceptor(response, requestInit)
       } else {
         if (response.ok) {
           switch (responseType) {
@@ -97,10 +96,9 @@ class Request {
       return Promise.reject(err)
     }
   }
-  // 发送请求
-  private send(method: Methods, data?: DataType | string | number, dataAndOptions: RequestOption = {}) {
-    let url = this.url;
-    const { data: body, headers: _headers, fetchOptions, responseType } = dataAndOptions;
+  // 处理RequestInit参数
+  private async getRequestInit(url: string, method: Methods, data?: DataType, dataAndOptions: RequestOption = {}): Promise<[RequestInit, string]> {
+    const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
     const headers = new Headers(Object.assign({}, this.headers, _headers));
     const init: RequestInit = {
       headers,
@@ -127,7 +125,18 @@ class Request {
         init.body = data
       }
     }
-    return this.request(url, init, responseType);
+    const _init = await this.reqInterceptor!(init)
+    return [_init, url]
+  }
+  // 自定义url请求方法
+  async request<T>(url: string, requestInit: RequestInit, responseType?: ResponseType): Promise<T> {
+    return await this.fetch(url,requestInit,responseType)
+  }
+  // 发送请求
+  private async send(method: Methods, data?: DataType, dataAndOptions: RequestOption = {}) {
+    const [init, url] = await this.getRequestInit(this.url, method, data, dataAndOptions);
+    const { responseType } = dataAndOptions
+    return this.fetch(url, init, responseType)
   }
   /**
    * post请求
@@ -135,7 +144,7 @@ class Request {
    * @param {object} dataAndOptions - 请求fetch参数
    * @returns
    */
-  post<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
+  post<R>(data?: DataType, dataAndOptions: RequestOption = {}): Promise<R> {
     return this.send("POST", data, dataAndOptions);
   }
   /**
@@ -144,7 +153,7 @@ class Request {
    * @param {object} dataAndOptions - 请求fetch参数
    * @returns
    */
-  delete<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
+  delete<R>(data?: DataType, dataAndOptions: RequestOption = {}): Promise<R> {
     return this.send("DELETE", data, dataAndOptions);
   }
   /**
@@ -153,7 +162,7 @@ class Request {
    * @param {object} dataAndOptions - 请求fetch参数
    * @returns
    */
-  put<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
+  put<R>(data?: DataType, dataAndOptions: RequestOption = {}): Promise<R> {
     return this.send("PUT", data, dataAndOptions);
   }
   /**
@@ -163,7 +172,7 @@ class Request {
    * @param {object} dataAndOptions - 请求fetch参数
    * @returns
    */
-  patch<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
+  patch<R>(data?: DataType, dataAndOptions: RequestOption = {}): Promise<R> {
     return this.send("PATCH", data, dataAndOptions);
   }
   /**
@@ -172,7 +181,7 @@ class Request {
    * @param {object} dataAndOptions - 请求fetch参数
    * @returns
    */
-  get<R>(data?: DataType | string | number, dataAndOptions: RequestOption = {}): Promise<R> {
+  get<R>(data?: DataType, dataAndOptions: RequestOption = {}): Promise<R> {
     return this.send("GET", data, dataAndOptions);
   }
 }

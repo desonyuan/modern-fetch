@@ -89,6 +89,12 @@ PostApi.post('file',{data:new Blob()})
 //示例6：发送ArrayBuffer
 PostApi.post(ArrayBuffer)
 ```
+### 自定义Url请求
+```typescript
+//每一个请求对象都有一个request方法，这个方法的url不受baseUrl和perfix影响。
+PostApi.request(url: string, requestInit:RequestInit,responseType?: ResponseType)
+```
+### fetch api 使用参考
 [fetch api MDN](https://developer.mozilla.org/en-US/docs/Web/API/fetch#syntax)
 
 
