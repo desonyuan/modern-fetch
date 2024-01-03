@@ -37,16 +37,14 @@ class Request {
         this.fetchOptions = fetchOptions || {};
         this.url = url;
     }
-    // 请求方法
-    async request(url, init, responseType) {
-        var _a;
+    // 发送请求
+    async fetch(url, requestInit, responseType) {
         // 发送请求
         try {
-            const response = await fetch(url, init);
-            const _init = await ((_a = this.reqInterceptor) === null || _a === void 0 ? void 0 : _a.call(this, init));
+            const response = await fetch(url, requestInit);
             // 有拦截器，执行拦截器
             if (this.resInterceptor) {
-                return this.resInterceptor(response, init);
+                return this.resInterceptor(response, requestInit);
             }
             else {
                 if (response.ok) {
@@ -75,10 +73,9 @@ class Request {
             return Promise.reject(err);
         }
     }
-    // 发送请求
-    send(method, data, dataAndOptions = {}) {
-        let url = this.url;
-        const { data: body, headers: _headers, fetchOptions, responseType } = dataAndOptions;
+    // 处理RequestInit参数
+    async getRequestInit(url, method, data, dataAndOptions = {}) {
+        const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
         const headers = new Headers(Object.assign({}, this.headers, _headers));
         const init = {
             headers,
@@ -109,7 +106,18 @@ class Request {
                 init.body = data;
             }
         }
-        return this.request(url, init, responseType);
+        const _init = await this.reqInterceptor(init);
+        return [_init, url];
+    }
+    // 自定义url请求方法
+    async request(url, requestInit, responseType) {
+        return await this.fetch(url, requestInit, responseType);
+    }
+    // 发送请求
+    async send(method, data, dataAndOptions = {}) {
+        const [init, url] = await this.getRequestInit(this.url, method, data, dataAndOptions);
+        const { responseType } = dataAndOptions;
+        return this.fetch(url, init, responseType);
     }
     /**
      * post请求

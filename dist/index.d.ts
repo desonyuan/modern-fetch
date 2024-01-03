@@ -34,7 +34,9 @@ declare class Request {
     private readonly fetchOptions;
     private readonly url;
     constructor(options: RequestFactory);
-    private request;
+    private fetch;
+    private getRequestInit;
+    request<T>(url: string, requestInit: RequestInit, responseType?: ResponseType): Promise<T>;
     private send;
     /**
      * post请求
@@ -42,21 +44,21 @@ declare class Request {
      * @param {object} dataAndOptions - 请求fetch参数
      * @returns
      */
-    post<R>(data?: DataType | string | number, dataAndOptions?: RequestOption): Promise<R>;
+    post<R>(data?: DataType, dataAndOptions?: RequestOption): Promise<R>;
     /**
      * 删除
      * @param {string|object} data - 需要删除记录的id
      * @param {object} dataAndOptions - 请求fetch参数
      * @returns
      */
-    delete<R>(data?: DataType | string | number, dataAndOptions?: RequestOption): Promise<R>;
+    delete<R>(data?: DataType, dataAndOptions?: RequestOption): Promise<R>;
     /**
      * 更新update 方法
      * @param {string|object} data - 需要更新记录的或者请求url
      * @param {object} dataAndOptions - 请求fetch参数
      * @returns
      */
-    put<R>(data?: DataType | string | number, dataAndOptions?: RequestOption): Promise<R>;
+    put<R>(data?: DataType, dataAndOptions?: RequestOption): Promise<R>;
     /**
     /**
      * 更新patch 方法
@@ -64,14 +66,14 @@ declare class Request {
      * @param {object} dataAndOptions - 请求fetch参数
      * @returns
      */
-    patch<R>(data?: DataType | string | number, dataAndOptions?: RequestOption): Promise<R>;
+    patch<R>(data?: DataType, dataAndOptions?: RequestOption): Promise<R>;
     /**
      * 条件查询
      * @param {string|object} data 查询的条件参数
      * @param {object} dataAndOptions - 请求fetch参数
      * @returns
      */
-    get<R>(data?: DataType | string | number, dataAndOptions?: RequestOption): Promise<R>;
+    get<R>(data?: DataType, dataAndOptions?: RequestOption): Promise<R>;
 }
 /**
  * 构造RestfulFetch实例，通常需要传入BaseUrl
