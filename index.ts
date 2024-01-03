@@ -1,7 +1,7 @@
 
-type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE' | "HEAD";
-type DataType = Record<string, any>;
-type HeaderType = Record<string, string>;
+type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
+type DataType = RequestInit['body'];
+type HeaderType = RequestInit["headers"];
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">
 type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"
 
@@ -10,26 +10,28 @@ type RestfulFetchFactoryBaseUrl = {
   prefix?: string,
 }
 
-interface IRestfulFetchFactoryConfig {
+interface IFactoryOption {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
-  reqInterceptor?: (config: RequestConfig) => Promise<RequestConfig>
-  resInterceptor?: (response: Response, options?: RequestConfig) => Promise<any>
+  reqInterceptor?: (config: RequestInit) => Promise<RequestInit>
+  resInterceptor?: (response: Response, options?: RequestInit) => Promise<any>
   errInterceptor?: (err: any) => void
 }
-type RequestConfig = { headers: HeaderType; fetchOptions: IFetchOption; responseType?: ResponseType, data?: DataType; url: string, method: Methods }
 
-type RequestFactory = IRestfulFetchFactoryConfig & { url: string }
+type RequestFactory = IFactoryOption & { url: string }
 // 发起实例请求方法参数类型
 type RequestOption = { headers?: HeaderType; fetchOptions?: IFetchOption; responseType?: ResponseType, data?: DataType }
 
 /**
  * 删除字符串两边的'/'
- * @param str string
+ * @param {string} str
  * @returns string
  */
 const removeSlash = (str: string) => {
   return str.trim().replace(/(^\/|\/$)/g, '')
+}
+const isObject = (value: any) => {
+  return Object.prototype.toString.call(value) === '[object Object]';
 }
 /**
  *fetch原生请求 用于不做任何包装的fetch请求
@@ -39,7 +41,7 @@ export const request = (url: string, options?: RequestInit): Promise<Response> =
 }
 // 请求类/
 class Request {
-  private readonly reqInterceptor: RequestFactory["reqInterceptor"]
+  private readonly reqInterceptor:RequestFactory["reqInterceptor"]
   private readonly resInterceptor: RequestFactory["resInterceptor"]
   private readonly errInterceptor: RequestFactory["errInterceptor"]
   private readonly headers: RequestFactory["headers"]
@@ -58,70 +60,21 @@ class Request {
       }
     }
     this.headers = headers;
-    this.fetchOptions = fetchOptions;
+    this.fetchOptions = fetchOptions || {};
     this.url = url
   }
   // 请求方法
-  private async fetch(url: string, method: Methods, options: RequestOption): Promise<any> {
-    method = method.toUpperCase() as Methods;
-    const { data, headers, fetchOptions } = options;
-    let body: any;
-    // 合并请求头
-    const assignHeader = Object.assign({}, this.headers, headers);
-    // 合并fetch请求参数
-    const _fetchOptions = Object.assign({}, this.fetchOptions, fetchOptions);
-    const config = await this.reqInterceptor!({ url, headers: assignHeader, data, fetchOptions: _fetchOptions, responseType: options.responseType, method })
-    const _headers = new Headers(config.headers);
-    // 处理数据&&是否需要写contentType请求头,如果有传入content type 则不做任何处理
-    const contentType = _headers.get('Content-Type');
-    if (method === "GET" || method === "HEAD") {
-      if (!contentType) {
-        _headers.append('Content-Type', 'application/x-www-form-urlencode')
-      }
-    } else {
-      if (data) {
-        if (FormData && data instanceof FormData) {
-          body = data;
-        } else {
-          if (!contentType) {
-            if (typeof data === 'object') {
-              _headers.append("Content-type", 'application/json;charset=utf-8')
-              try {
-                body = JSON.stringify(data)
-              } catch (error) {
-                return Promise.reject(error)
-              }
-            }
-          } else {
-            if (typeof data === 'object') {
-              try {
-                body = JSON.stringify(data)
-              } catch (error) {
-                return Promise.reject(error)
-              }
-            }
-          }
-        }
-      } else {
-        if (!contentType) {
-          _headers.append("Content-type", 'application/json;charset=utf-8')
-        }
-      }
-    }
+  private async request(url: string, init: RequestInit, responseType?: ResponseType): Promise<any> {
     // 发送请求
     try {
-      const response = await request(config.url, {
-        headers: _headers,
-        method,
-        body,
-        ...config.fetchOptions,
-      })
+      const response = await fetch(url, init);
+      const _init= await this.reqInterceptor?.(init)
       // 有拦截器，执行拦截器
       if (this.resInterceptor) {
-        return this.resInterceptor(response, config)
+        return this.resInterceptor(response, init)
       } else {
         if (response.ok) {
-          switch (config.responseType) {
+          switch (responseType) {
             case "text":
               return await response.text()
             case "blob":
@@ -147,25 +100,34 @@ class Request {
   // 发送请求
   private send(method: Methods, data?: DataType | string | number, dataAndOptions: RequestOption = {}) {
     let url = this.url;
-    let body: RequestOption = dataAndOptions;
+    const { data: body, headers: _headers, fetchOptions, responseType } = dataAndOptions;
+    const headers = new Headers(Object.assign({}, this.headers, _headers));
+    const init: RequestInit = {
+      headers,
+      method,
+      ...Object.assign({}, this.fetchOptions, fetchOptions),
+    };
     if (data) {
       if (typeof data === "string" || typeof data === "number") {
-        url += `/${removeSlash(data + '')}`;
-        if (body.data) {
-          if (method === "GET") {
-            url += '?' + new URLSearchParams(body.data).toString();
-            delete body.data;
+        url += `/${removeSlash(data + '')}`; //拼接url
+        if (body) {
+          if (isObject(body) || typeof body == "string") {
+            if (method === "GET") {
+              url = `${url}?${new URLSearchParams(body as any).toString()}`;
+            } else {
+              init.body = typeof body == "string" ? body : JSON.stringify(body)
+            }
+          } else {
+            init.body = body;
           }
         }
-      } else if (typeof data == "object") {
-        if (method === "GET") {
-          url += '?' + new URLSearchParams(data).toString()
-        } else {
-          body.data = data
-        }
+      } else if (isObject(data) && typeof data == "string") {
+        init.body = typeof data == "string" ? data : JSON.stringify(data)
+      } else {
+        init.body = data
       }
     }
-    return this.fetch(url, method, body);
+    return this.request(url, init, responseType);
   }
   /**
    * post请求
@@ -218,7 +180,7 @@ class Request {
  * 构造RestfulFetch实例，通常需要传入BaseUrl
  */
 export class RestfulFetch {
-  constructor(private readonly options: IRestfulFetchFactoryConfig & RestfulFetchFactoryBaseUrl = {}) {
+  constructor(private readonly options: IFactoryOption & RestfulFetchFactoryBaseUrl = {}) {
   }
 
   /**

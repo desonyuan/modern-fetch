@@ -3,11 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RestfulFetch = exports.request = void 0;
 /**
  * 删除字符串两边的'/'
- * @param str string
+ * @param {string} str
  * @returns string
  */
 const removeSlash = (str) => {
     return str.trim().replace(/(^\/|\/$)/g, '');
+};
+const isObject = (value) => {
+    return Object.prototype.toString.call(value) === '[object Object]';
 };
 /**
  *fetch原生请求 用于不做任何包装的fetch请求
@@ -31,77 +34,23 @@ class Request {
             }
         };
         this.headers = headers;
-        this.fetchOptions = fetchOptions;
+        this.fetchOptions = fetchOptions || {};
         this.url = url;
     }
     // 请求方法
-    async fetch(url, method, options) {
-        method = method.toUpperCase();
-        const { data, headers, fetchOptions } = options;
-        let body;
-        // 合并请求头
-        const assignHeader = Object.assign({}, this.headers, headers);
-        // 合并fetch请求参数
-        const _fetchOptions = Object.assign({}, this.fetchOptions, fetchOptions);
-        const config = await this.reqInterceptor({ url, headers: assignHeader, data, fetchOptions: _fetchOptions, responseType: options.responseType, method });
-        const _headers = new Headers(config.headers);
-        // 处理数据&&是否需要写contentType请求头,如果有传入content type 则不做任何处理
-        const contentType = _headers.get('Content-Type');
-        if (method === "GET" || method === "HEAD") {
-            if (!contentType) {
-                _headers.append('Content-Type', 'application/x-www-form-urlencode');
-            }
-        }
-        else {
-            if (data) {
-                if (FormData && data instanceof FormData) {
-                    body = data;
-                }
-                else {
-                    if (!contentType) {
-                        if (typeof data === 'object') {
-                            _headers.append("Content-type", 'application/json;charset=utf-8');
-                            try {
-                                body = JSON.stringify(data);
-                            }
-                            catch (error) {
-                                return Promise.reject(error);
-                            }
-                        }
-                    }
-                    else {
-                        if (typeof data === 'object') {
-                            try {
-                                body = JSON.stringify(data);
-                            }
-                            catch (error) {
-                                return Promise.reject(error);
-                            }
-                        }
-                    }
-                }
-            }
-            else {
-                if (!contentType) {
-                    _headers.append("Content-type", 'application/json;charset=utf-8');
-                }
-            }
-        }
+    async request(url, init, responseType) {
+        var _a;
         // 发送请求
         try {
-            const response = await (0, exports.request)(config.url, {
-                headers: _headers,
-                method,
-                body,
-                ...config.fetchOptions,
-            });
+            const response = await fetch(url, init);
+            const _init = await ((_a = this.reqInterceptor) === null || _a === void 0 ? void 0 : _a.call(this, init));
             // 有拦截器，执行拦截器
             if (this.resInterceptor) {
-                return this.resInterceptor(response, config);
+                return this.resInterceptor(response, init);
             }
             else {
                 if (response.ok) {
-                    switch (config.responseType) {
+                    switch (responseType) {
                         case "text":
                             return await response.text();
                         case "blob":
@@ -129,27 +78,38 @@ class Request {
     // 发送请求
     send(method, data, dataAndOptions = {}) {
         let url = this.url;
-        let body = dataAndOptions;
+        const { data: body, headers: _headers, fetchOptions, responseType } = dataAndOptions;
+        const headers = new Headers(Object.assign({}, this.headers, _headers));
+        const init = {
+            headers,
+            method,
+            ...Object.assign({}, this.fetchOptions, fetchOptions),
+        };
         if (data) {
             if (typeof data === "string" || typeof data === "number") {
-                url += `/${removeSlash(data + '')}`;
-                if (body.data) {
-                    if (method === "GET") {
-                        url += '?' + new URLSearchParams(body.data).toString();
-                        delete body.data;
+                url += `/${removeSlash(data + '')}`; //拼接url
+                if (body) {
+                    if (isObject(body) || typeof body == "string") {
+                        if (method === "GET") {
+                            url = `${url}?${new URLSearchParams(body).toString()}`;
+                        }
+                        else {
+                            init.body = typeof body == "string" ? body : JSON.stringify(body);
+                        }
+                    }
+                    else {
+                        init.body = body;
                     }
                 }
             }
-            else if (typeof data == "object") {
-                if (method === "GET") {
-                    url += '?' + new URLSearchParams(data).toString();
-                }
-                else {
-                    body.data = data;
-                }
+            else if (isObject(data) && typeof data == "string") {
+                init.body = typeof data == "string" ? data : JSON.stringify(data);
+            }
+            else {
+                init.body = data;
             }
         }
-        return this.fetch(url, method, body);
+        return this.request(url, init, responseType);
     }
     /**
      * post请求

@@ -8,31 +8,34 @@ DesonFeth是一款基于fetch api 轻封装的http请求库，封装了一些res
 npm install @deson/fetch --save
 ```
 
-### 使用
+### 内部的类型定义
 
 ```typescript
-//使用示例
-import { RestfulFetch } from '@deson/fetch';
+type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
+type DataType = RequestInit['body'];
+type HeaderType = RequestInit["headers"];
+type IFetchOption = Omit<RequestInit, "body" | "method" | "headers"> //fetch RequestInit 剔除body、method、headers选项。
+type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer" //响应类型
 
-//与后端约定的响应格式
-interface ResponseStructure {
-  statusCode: number;
-  data: any;
-  message: string;
+type RequestOption = { headers?: HeaderType; fetchOptions?: IFetchOption; responseType?: ResponseType, data?: DataType }
+
+interface IFactoryOption {
+  headers?: HeaderType
+  fetchOptions?: IFetchOption,
+  reqInterceptor?: (config: RequestInit) => Promise<RequestInit>
+  resInterceptor?: (response: Response, options?: RequestInit) => Promise<any>
+  errInterceptor?: (err: any) => void
+  baseUrl?: string;
+  prefix?: string,
 }
-//类型定义
-type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE' | "HEAD";
-type DataType = Record<string, any> | FormData;
-type HeaderType = Record<string, string>;
-type IFetchOption = Omit<RequestInit, "body" | "method" | "headers"> //fetch 请求参数去除 "body" | "method" | "headers"
-type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"
-type RequestConfig={  headers: HeaderType ;fetchOptions: IFetchOption; responseType: ResponseType,data?:DataType;url:string,method:Methods }
-
-//构造基础实例对象 构造参数内的选项均为可选参数
+```
+### 使用示例
+```typescript
+//构造基础实例对象 构造参数为可选参数  new RestfulFetch(options?:IFactoryOption)
 export const CommonHttp = new RestfulFetch({
   baseUrl: 'http://www.baidu.com',//该实例的请求地址
   prefix: 'api', //请求前缀
-  fetchOptions: {//原生fetch 剔除body、method、headers选项。 Omit<RequestInit, "body" | "method" | "headers">
+  fetchOptions: {
     mode: 'cors',
     credentials: 'include',
   },
@@ -40,36 +43,20 @@ export const CommonHttp = new RestfulFetch({
    *请求拦截器，每次发送请求都会执行该函数,常用修改请求配置参数，例如修改请求头
    *@return RequestConfig
   */
- async resInterceptor(config:RequestConfig){
-  config.headers.authorization=token;
+ async resInterceptor(config:RequestInit){
+  config.headers.append('token', '123456');
   return config
  }
 
-  /* 响应拦截器
-  *如果不传此函数，默认请求参数options中没有responseType或者responseType等于json的时候会执行 await response.json()
-  *建议传此函数自行处理响应结果。
+  /*
+   *响应拦截器
   */
-  async resInterceptor(response, options) {
-    const { responseType } = options!;
+  async resInterceptor(response, config:RequestInit) {
     // 请求成功示例
     if (response.ok) {
-       if(!responseType||responseType==="json"){
-            const resData: ResponseStructure = await response.json();
-            const { statusCode, data, message } = resData;
-            if (statusCode === 200) {
-              return data;
-            } else {
-              Toast.show({
-                icon: 'fail',
-                content: message,
-              });
-              return Promise.reject()
-            }
-        }else{
-          // 其他响应类型处理
-        }
+      return Promise.resolve(await response.json());
     } else {
-      return Promise.reject();
+      return Promise.reject(response);
     }
   },
   //fetch错误拦截，
@@ -81,12 +68,11 @@ export const CommonHttp = new RestfulFetch({
   },
 });
 /**
- * 基于上面创建的CommonHttp创建restful风格接口请求对象
+ * 基于上面创建的CommonHttp创建请求对象
  * PostApi对象拥有post、delete、get、put、patch请求方法;
- * 每个请求方法接收两个参数:PostApi.[method](data, option);
- * 第一个参数可以是Object或者string，第二个参数Object;
- * 第一个参数如果为Object则视为请求参数(此时忽略第二个参数中的data参数),例:PostApi.get({ id:1 },option)会发送post请求到http://www.baidu.com/news?id=1,
- * 第一个参数如果为string则视为追加的url,例:PostApi.post('hot',option)会发送post请求到http://www.baidu.com/news/hot,如果需要发送请求参数则在第二个参数中传入{data:{xxx}}
+ * 每个请求方法接收两个参数:PostApi.[method](data:RequestInit['body'], option:RequestOption);
+ * 第一个参数如果为RequestInit['body']则视为请求参数(此时忽略option参数中的data参数),例:PostApi.get({ id:1 },option)会发送post请求到http://www.baidu.com/news?id=1,
+ * 第一个参数如果为string则视为追加的url,例:PostApi.post('hot',option)会发送post请求到http://www.baidu.com/news/hot,如果需要发送请求参数则在第二个参数中传入{data:RequestInit['body']}
  */
 const PostApi = CommonHttp.create('/news');
 
@@ -96,7 +82,14 @@ PostApi.get()
 PostApi.get({id: 1})
 //示例3：发送get请求news/hot并携带id参数， http://www.baidu.com/api/news/hot?id=1
 PostApi.get('hot',{data:{id: 1}})
-//其他请求方法使用同上
+//示例4：发送FormData
+PostApi.post(new FormData())
+//示例5：发送Blob
+PostApi.post('file',{data:new Blob()})
+//示例6：发送ArrayBuffer
+PostApi.post(ArrayBuffer)
 ```
+[fetch api MDN](https://developer.mozilla.org/en-US/docs/Web/API/fetch#syntax)
+
 
 

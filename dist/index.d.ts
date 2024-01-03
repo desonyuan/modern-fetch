@@ -1,28 +1,19 @@
-type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE' | "HEAD";
-type DataType = Record<string, any>;
-type HeaderType = Record<string, string>;
+type DataType = RequestInit['body'];
+type HeaderType = RequestInit["headers"];
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">;
 type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer";
 type RestfulFetchFactoryBaseUrl = {
     baseUrl?: string;
     prefix?: string;
 };
-interface IRestfulFetchFactoryConfig {
+interface IFactoryOption {
     headers?: HeaderType;
     fetchOptions?: IFetchOption;
-    reqInterceptor?: (config: RequestConfig) => Promise<RequestConfig>;
-    resInterceptor?: (response: Response, options?: RequestConfig) => Promise<any>;
+    reqInterceptor?: (config: RequestInit) => Promise<RequestInit>;
+    resInterceptor?: (response: Response, options?: RequestInit) => Promise<any>;
     errInterceptor?: (err: any) => void;
 }
-type RequestConfig = {
-    headers: HeaderType;
-    fetchOptions: IFetchOption;
-    responseType?: ResponseType;
-    data?: DataType;
-    url: string;
-    method: Methods;
-};
-type RequestFactory = IRestfulFetchFactoryConfig & {
+type RequestFactory = IFactoryOption & {
     url: string;
 };
 type RequestOption = {
@@ -43,7 +34,7 @@ declare class Request {
     private readonly fetchOptions;
     private readonly url;
     constructor(options: RequestFactory);
-    private fetch;
+    private request;
     private send;
     /**
      * post请求
@@ -87,7 +78,7 @@ declare class Request {
  */
 export declare class RestfulFetch {
     private readonly options;
-    constructor(options?: IRestfulFetchFactoryConfig & RestfulFetchFactoryBaseUrl);
+    constructor(options?: IFactoryOption & RestfulFetchFactoryBaseUrl);
     /**
      * 创建基于RestfulFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
      * @param url 请求url
