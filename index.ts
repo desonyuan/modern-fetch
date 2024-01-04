@@ -1,10 +1,10 @@
 
 type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
 type DataType = RequestInit['body'];
-type HeaderType = RequestInit["headers"];
+type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">
 type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"
-
+type IRequestInit = RequestInit & { headers: Headers }
 type RestfulFetchFactoryBaseUrl = {
   baseUrl?: string;
   prefix?: string,
@@ -13,12 +13,11 @@ type RestfulFetchFactoryBaseUrl = {
 interface IFactoryOption {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
-  reqInterceptor?: (config: RequestInit) => Promise<RequestInit>
-  resInterceptor?: (response: Response, options?: RequestInit) => Promise<any>
+  reqInterceptor?: (requestInit: IRequestInit) => Promise<IRequestInit>
+  resInterceptor?: (response: Response, requestInit?: IRequestInit) => Promise<any>
   errInterceptor?: (err: any) => void
 }
 
-type RequestFactory = IFactoryOption & { url: string }
 // 发起实例请求方法参数类型
 type RequestOption = { headers?: HeaderType; fetchOptions?: IFetchOption; responseType?: ResponseType, data?: DataType }
 
@@ -41,14 +40,14 @@ export const request = (url: string, options?: RequestInit): Promise<Response> =
 }
 // 请求类/
 class Request {
-  private readonly reqInterceptor: RequestFactory["reqInterceptor"]
-  private readonly resInterceptor: RequestFactory["resInterceptor"]
-  private readonly errInterceptor: RequestFactory["errInterceptor"]
-  private readonly headers: RequestFactory["headers"]
-  private readonly fetchOptions: RequestFactory["fetchOptions"]
+  private readonly reqInterceptor: IFactoryOption["reqInterceptor"]
+  private readonly resInterceptor: IFactoryOption["resInterceptor"]
+  private readonly errInterceptor: IFactoryOption["errInterceptor"]
+  private readonly headers: IFactoryOption["headers"]
+  private readonly fetchOptions: IFactoryOption["fetchOptions"]
   private readonly url!: string
 
-  constructor(options: RequestFactory) {
+  constructor(options: IFactoryOption&{url:string}) {
     const { headers, resInterceptor, errInterceptor, reqInterceptor, fetchOptions, url } = options;
     this.resInterceptor = resInterceptor;
     this.errInterceptor = errInterceptor;
@@ -64,7 +63,7 @@ class Request {
     this.url = url
   }
   // 发送请求
- private async fetch(url: string, requestInit: RequestInit, responseType?: ResponseType) {
+ private async fetch(url: string, requestInit: IRequestInit, responseType?: ResponseType) {
     // 发送请求
     try {
       const response = await fetch(url, requestInit);
@@ -97,10 +96,10 @@ class Request {
     }
   }
   // 处理RequestInit参数
-  private async getRequestInit(url: string, method: Methods, data?: DataType, dataAndOptions: RequestOption = {}): Promise<[RequestInit, string]> {
+  private async getRequestInit(url: string, method: Methods, data?: DataType, dataAndOptions: RequestOption = {}): Promise<[IRequestInit, string]> {
     const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
     const headers = new Headers(Object.assign({}, this.headers, _headers));
-    const init: RequestInit = {
+    const init: RequestInit&{headers:Headers} = {
       headers,
       method,
       ...Object.assign({}, this.fetchOptions, fetchOptions),
@@ -130,7 +129,7 @@ class Request {
   }
   // 自定义url请求方法
   async request<T>(url: string, requestInit: RequestInit, responseType?: ResponseType): Promise<T> {
-    return await this.fetch(url,requestInit,responseType)
+    return await this.fetch(url,requestInit as IRequestInit,responseType)
   }
   // 发送请求
   private async send(method: Methods, data?: DataType, dataAndOptions: RequestOption = {}) {

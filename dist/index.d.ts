@@ -1,9 +1,10 @@
-type DataType = RequestInit['body'] & {
-    uri?: string;
-};
-type HeaderType = RequestInit["headers"];
+type DataType = RequestInit['body'];
+type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">;
 type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer";
+type IRequestInit = RequestInit & {
+    headers: Headers;
+};
 type RestfulFetchFactoryBaseUrl = {
     baseUrl?: string;
     prefix?: string;
@@ -11,13 +12,10 @@ type RestfulFetchFactoryBaseUrl = {
 interface IFactoryOption {
     headers?: HeaderType;
     fetchOptions?: IFetchOption;
-    reqInterceptor?: (config: RequestInit) => Promise<RequestInit>;
-    resInterceptor?: (response: Response, options?: RequestInit) => Promise<any>;
+    reqInterceptor?: (requestInit: IRequestInit) => Promise<IRequestInit>;
+    resInterceptor?: (response: Response, requestInit?: IRequestInit) => Promise<any>;
     errInterceptor?: (err: any) => void;
 }
-type RequestFactory = IFactoryOption & {
-    url: string;
-};
 type RequestOption = {
     headers?: HeaderType;
     fetchOptions?: IFetchOption;
@@ -35,7 +33,9 @@ declare class Request {
     private readonly headers;
     private readonly fetchOptions;
     private readonly url;
-    constructor(options: RequestFactory);
+    constructor(options: IFactoryOption & {
+        url: string;
+    });
     private fetch;
     private getRequestInit;
     request<T>(url: string, requestInit: RequestInit, responseType?: ResponseType): Promise<T>;

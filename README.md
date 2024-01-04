@@ -13,7 +13,7 @@ npm install @deson/fetch --save
 ```typescript
 type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
 type DataType = RequestInit['body'];
-type HeaderType = RequestInit["headers"];
+type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers"> //fetch RequestInit 剔除body、method、headers选项。
 type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer" //响应类型
 
