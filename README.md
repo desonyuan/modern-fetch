@@ -15,7 +15,7 @@ type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
 type DataType = RequestInit['body'];
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers"> //fetch RequestInit 剔除body、method、headers选项。
-type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer" //响应类型
+type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer" //响应类型 初始化如果有 resInterceptor函数，此参数无意义
 
 type RequestOption = { headers?: HeaderType; fetchOptions?: IFetchOption; responseType?: ResponseType, data?: DataType }
 
@@ -31,7 +31,7 @@ interface IFactoryOption {
 ```
 ### 使用示例
 ```typescript
-//构造基础实例对象 构造参数为可选参数  new RestfulFetch(options?:IFactoryOption)
+//初始化，构造基础实例对象 构造参数为可选参数  new RestfulFetch(options?:IFactoryOption)
 export const CommonHttp = new RestfulFetch({
   baseUrl: 'http://www.baidu.com',//该实例的请求地址
   prefix: 'api', //请求前缀
@@ -41,7 +41,7 @@ export const CommonHttp = new RestfulFetch({
   },
   /*
    *请求拦截器，每次发送请求都会执行该函数,常用修改请求配置参数，例如修改请求头
-   *@return RequestConfig
+   *@return RequestInit
   */
  async resInterceptor(config:RequestInit){
   config.headers.append('token', '123456');
@@ -49,7 +49,9 @@ export const CommonHttp = new RestfulFetch({
  }
 
   /*
-   *响应拦截器
+   *响应拦截器 如果传入该函数，则会在请求成功后执行该函数，常用做一些处理，例如处理请求成功后的响应数据，返回Promise.resolve(data)
+   *如果传入该函数则无视 responseType
+  *@return Promise<any>
   */
   async resInterceptor(response, config:RequestInit) {
     // 请求成功示例
