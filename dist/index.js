@@ -44,7 +44,7 @@ class Request {
             const response = await fetch(url, requestInit);
             // 有拦截器，执行拦截器
             if (this.resInterceptor) {
-                return this.resInterceptor(response, requestInit);
+                return this.resInterceptor(response, responseType, requestInit);
             }
             else {
                 if (response.ok) {

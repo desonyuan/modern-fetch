@@ -14,7 +14,7 @@ interface IFactoryOption {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
   reqInterceptor?: (requestInit: IRequestInit) => Promise<IRequestInit>
-  resInterceptor?: (response: Response, requestInit?: IRequestInit) => Promise<any>
+  resInterceptor?: (response: Response,responseType?:ResponseType, requestInit?: IRequestInit) => Promise<any>
   errInterceptor?: (err: any) => void
 }
 
@@ -69,7 +69,7 @@ class Request {
       const response = await fetch(url, requestInit);
       // 有拦截器，执行拦截器
       if (this.resInterceptor) {
-        return this.resInterceptor(response, requestInit)
+        return this.resInterceptor(response,responseType, requestInit)
       } else {
         if (response.ok) {
           switch (responseType) {

@@ -15,7 +15,7 @@ type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
 type DataType = RequestInit['body'];
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers"> //fetch RequestInit 剔除body、method、headers选项。
-type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer" //响应类型 初始化如果有 resInterceptor函数，此参数无意义
+type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer" //响应数据类型
 
 type RequestOption = { headers?: HeaderType; fetchOptions?: IFetchOption; responseType?: ResponseType, data?: DataType }
 
@@ -23,7 +23,7 @@ interface IFactoryOption {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
   reqInterceptor?: (config: RequestInit) => Promise<RequestInit>
-  resInterceptor?: (response: Response, options?: RequestInit) => Promise<any>
+  resInterceptor?: (response: Response,responseType?:ResponseType, options?: RequestInit) => Promise<any>
   errInterceptor?: (err: any) => void
   baseUrl?: string;
   prefix?: string,
@@ -49,14 +49,19 @@ export const CommonHttp = new RestfulFetch({
  }
 
   /*
-   *响应拦截器 如果传入该函数，则会在请求成功后执行该函数，常用做一些处理，例如处理请求成功后的响应数据，返回Promise.resolve(data)
-   *如果传入该函数则无视 responseType
+   *响应拦截器 如果传入该函数，则会在请求成功后执行该函数，例如处理请求成功后的响应数据
   *@return Promise<any>
   */
-  async resInterceptor(response, config:RequestInit) {
+  async resInterceptor(response,responseType, requestInit) {
     // 请求成功示例
     if (response.ok) {
-      return Promise.resolve(await response.json());
+      if(responseType === 'json'){
+        return await response.json()
+      }else if(responseType === 'text'){
+        return await response.text()
+      }else{
+        // other processing
+      }
     } else {
       return Promise.reject(response);
     }
@@ -90,6 +95,8 @@ PostApi.post(new FormData())
 PostApi.post('file',{data:new Blob()})
 //示例6：发送ArrayBuffer
 PostApi.post(ArrayBuffer)
+//示例6：文件下载 http://www.baidu.com/api/news/pic.jpge
+PostApi.get('pic.jpge',{responseType:'blob'})
 ```
 ### 自定义Url请求
 ```typescript
