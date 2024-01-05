@@ -97,7 +97,7 @@ class Request {
   }
   // 处理RequestInit参数
   private async getRequestInit(url: string, method: Methods, data?: DataType, dataAndOptions: RequestOption = {}): Promise<[IRequestInit, string]> {
-    const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
+    let { data: body, headers: _headers, fetchOptions } = dataAndOptions;
     const defaultHeaders: Record<string, string> = {}
     const reqInit: RequestInit = {
       method,
@@ -105,20 +105,21 @@ class Request {
     };
     const dataIsString = typeof data === "string";
     const bodyIsString = typeof body === "string";
-    console.log(dataIsString,'dataIsStringdataIsStringdataIsString');
     const bodyHandler=()=>{
       if (body) {
         if (isObject(body)) {
           if (method === "GET") {
             url = `${url}?${new URLSearchParams(body as any).toString()}`;
-            defaultHeaders['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8'
           } else {
             reqInit.body = JSON.stringify(body)
             defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
           }
         } else {
           if (bodyIsString) {
-            defaultHeaders['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8'
+            defaultHeaders['Content-Type'] = 'text/plain;charset=utf-8'
+          }else if(Array.isArray(body)){
+            defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
+            body = JSON.stringify(body)
           }
           reqInit.body = body;
         }
@@ -133,7 +134,12 @@ class Request {
           defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
           reqInit.body = JSON.stringify(data)
         } else {
-          reqInit.body = data
+          if(Array.isArray(body)){
+            defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
+            reqInit.body = JSON.stringify(data)
+          }else{
+            reqInit.body = data
+          }
         }
       }
     }else{
