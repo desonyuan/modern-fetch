@@ -97,7 +97,7 @@ class Request {
   }
   // 处理RequestInit参数
   private async getRequestInit(url: string, method: Methods, data?: DataType, dataAndOptions: RequestOption = {}): Promise<[IRequestInit, string]> {
-    let { data: body, headers: _headers, fetchOptions } = dataAndOptions;
+    const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
     const defaultHeaders: Record<string, string> = {}
     const reqInit: RequestInit = {
       method,
@@ -115,13 +115,14 @@ class Request {
             defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
           }
         } else {
+          let _body=body
           if (bodyIsString) {
             defaultHeaders['Content-Type'] = 'text/plain;charset=utf-8'
           }else if(Array.isArray(body)){
             defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
-            body = JSON.stringify(body)
+            _body = JSON.stringify(body)
           }
-          reqInit.body = body;
+          reqInit.body = _body;
         }
       }
     }
@@ -130,16 +131,11 @@ class Request {
         url += `/${removeSlash(data + '')}`; //拼接url
         bodyHandler()
       }else{
-        if (isObject(data)) {
+        if (isObject(data)||Array.isArray(data)) {
           defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
           reqInit.body = JSON.stringify(data)
         } else {
-          if(Array.isArray(body)){
-            defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
-            reqInit.body = JSON.stringify(data)
-          }else{
-            reqInit.body = data
-          }
+          reqInit.body = data
         }
       }
     }else{
