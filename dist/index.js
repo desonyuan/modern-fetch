@@ -82,35 +82,45 @@ class Request {
             ...Object.assign({}, this.fetchOptions, fetchOptions),
         };
         const dataIsString = typeof data === "string";
-        if (data === undefined || body && dataIsString) {
-            const bodyIsString = typeof body === "string";
-            if (isObject(body)) {
-                if (method === "GET") {
-                    url = `${url}?${new URLSearchParams(body).toString()}`;
-                    defaultHeaders['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8';
+        const bodyIsString = typeof body === "string";
+        console.log(dataIsString, 'dataIsStringdataIsStringdataIsString');
+        const bodyHandler = () => {
+            if (body) {
+                if (isObject(body)) {
+                    if (method === "GET") {
+                        url = `${url}?${new URLSearchParams(body).toString()}`;
+                        defaultHeaders['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8';
+                    }
+                    else {
+                        reqInit.body = JSON.stringify(body);
+                        defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
+                    }
                 }
                 else {
-                    reqInit.body = JSON.stringify(body);
-                    defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
+                    if (bodyIsString) {
+                        defaultHeaders['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8';
+                    }
+                    reqInit.body = body;
                 }
+            }
+        };
+        if (data) {
+            if (dataIsString || typeof data === "number") {
+                url += `/${removeSlash(data + '')}`; //拼接url
+                bodyHandler();
             }
             else {
-                if (bodyIsString) {
-                    defaultHeaders['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8';
+                if (isObject(data)) {
+                    defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
+                    reqInit.body = JSON.stringify(data);
                 }
-                reqInit.body = body;
+                else {
+                    reqInit.body = data;
+                }
             }
         }
-        if (dataIsString || typeof data === "number") {
-            url += `/${removeSlash(data + '')}`; //拼接url
-        }
-        else if (isObject(data)) {
-            defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
-            reqInit.body = JSON.stringify(data);
-        }
         else {
-            reqInit.body = data;
-            delete defaultHeaders['Content-Type'];
+            bodyHandler();
         }
         reqInit.headers = new Headers(Object.assign({}, this.headers, defaultHeaders, _headers));
         const _reqInit = await this.reqInterceptor(reqInit);
