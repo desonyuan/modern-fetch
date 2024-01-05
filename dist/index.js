@@ -132,7 +132,6 @@ class Request {
         }
         reqInit.headers = new Headers(Object.assign({}, this.headers, defaultHeaders, _headers));
         const _reqInit = await this.reqInterceptor(reqInit);
-        console.log(body, data, defaultHeaders);
         return [_reqInit, url];
     }
     // 自定义url请求方法
