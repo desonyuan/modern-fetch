@@ -76,38 +76,45 @@ class Request {
     // 处理RequestInit参数
     async getRequestInit(url, method, data, dataAndOptions = {}) {
         const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
-        const headers = new Headers(Object.assign({}, this.headers, _headers));
-        const init = {
-            headers,
+        const defaultHeaders = {};
+        const reqInit = {
             method,
             ...Object.assign({}, this.fetchOptions, fetchOptions),
         };
-        if (data) {
-            if (typeof data === "string" || typeof data === "number") {
-                url += `/${removeSlash(data + '')}`; //拼接url
-                if (body) {
-                    if (isObject(body) || typeof body == "string") {
-                        if (method === "GET") {
-                            url = `${url}?${new URLSearchParams(body).toString()}`;
-                        }
-                        else {
-                            init.body = typeof body == "string" ? body : JSON.stringify(body);
-                        }
-                    }
-                    else {
-                        init.body = body;
-                    }
+        const dataIsString = typeof data === "string";
+        if (data === undefined || body && dataIsString) {
+            const bodyIsString = typeof body === "string";
+            if (isObject(body)) {
+                if (method === "GET") {
+                    url = `${url}?${new URLSearchParams(body).toString()}`;
+                    defaultHeaders['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8';
+                }
+                else {
+                    reqInit.body = JSON.stringify(body);
+                    defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
                 }
             }
-            else if (isObject(data) && typeof data == "string") {
-                init.body = typeof data == "string" ? data : JSON.stringify(data);
-            }
             else {
-                init.body = data;
+                if (bodyIsString) {
+                    defaultHeaders['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8';
+                }
+                reqInit.body = body;
             }
         }
-        const _init = await this.reqInterceptor(init);
-        return [_init, url];
+        if (dataIsString || typeof data === "number") {
+            url += `/${removeSlash(data + '')}`; //拼接url
+        }
+        else if (isObject(data)) {
+            defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
+            reqInit.body = JSON.stringify(data);
+        }
+        else {
+            reqInit.body = data;
+            delete defaultHeaders['Content-Type'];
+        }
+        reqInit.headers = new Headers(Object.assign({}, this.headers, defaultHeaders, _headers));
+        const _reqInit = await this.reqInterceptor(reqInit);
+        return [_reqInit, url];
     }
     // 自定义url请求方法
     async request(url, requestInit, responseType) {
@@ -121,8 +128,8 @@ class Request {
     }
     /**
      * post请求
-     * @param {string|object} data - 请求体或者请求url
-     * @param {object} dataAndOptions - 请求fetch参数
+     * @param {DataType} data - 请求体或者请求url
+     * @param {RequestOption} dataAndOptions - 请求参数
      * @returns
      */
     post(data, dataAndOptions = {}) {
@@ -130,8 +137,8 @@ class Request {
     }
     /**
      * 删除
-     * @param {string|object} data - 需要删除记录的id
-     * @param {object} dataAndOptions - 请求fetch参数
+     * @param {DataType} data - 需要删除记录的id
+     * @param {RequestOption} dataAndOptions - 请求参数
      * @returns
      */
     delete(data, dataAndOptions = {}) {
@@ -139,8 +146,8 @@ class Request {
     }
     /**
      * 更新update 方法
-     * @param {string|object} data - 需要更新记录的或者请求url
-     * @param {object} dataAndOptions - 请求fetch参数
+     * @param {DataType} data - 需要更新记录的或者请求url
+     * @param {RequestOption} dataAndOptions - 请求参数
      * @returns
      */
     put(data, dataAndOptions = {}) {
@@ -148,9 +155,9 @@ class Request {
     }
     /**
     /**
-     * 更新patch 方法
-     * @param {string|object} data - 需要更新记录的或者请求url
-     * @param {object} dataAndOptions - 请求fetch参数
+     * patch
+     * @param {DataType} data - 需要更新记录的或者请求url
+     * @param {RequestOption} dataAndOptions - 请求参数
      * @returns
      */
     patch(data, dataAndOptions = {}) {
@@ -158,8 +165,8 @@ class Request {
     }
     /**
      * 条件查询
-     * @param {string|object} data 查询的条件参数
-     * @param {object} dataAndOptions - 请求fetch参数
+     * @param {DataType} data 查询的条件参数
+     * @param {RequestOption} dataAndOptions - 请求参数
      * @returns
      */
     get(data, dataAndOptions = {}) {

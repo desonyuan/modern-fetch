@@ -14,11 +14,11 @@ interface IFactoryOption {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
   reqInterceptor?: (requestInit: IRequestInit) => Promise<IRequestInit>
-  resInterceptor?: (response: Response,responseType?:ResponseType, requestInit?: IRequestInit) => Promise<any>
+  resInterceptor?: (response: Response, responseType?: ResponseType, requestInit?: IRequestInit) => Promise<any>
   errInterceptor?: (err: any) => void
 }
 
-// 发起实例请求方法参数类型
+// 发起请求方法参数类型
 type RequestOption = { headers?: HeaderType; fetchOptions?: IFetchOption; responseType?: ResponseType, data?: DataType }
 
 /**
@@ -47,7 +47,7 @@ class Request {
   private readonly fetchOptions: IFactoryOption["fetchOptions"]
   private readonly url!: string
 
-  constructor(options: IFactoryOption&{url:string}) {
+  constructor(options: IFactoryOption & { url: string }) {
     const { headers, resInterceptor, errInterceptor, reqInterceptor, fetchOptions, url } = options;
     this.resInterceptor = resInterceptor;
     this.errInterceptor = errInterceptor;
@@ -63,13 +63,13 @@ class Request {
     this.url = url
   }
   // 发送请求
- private async fetch(url: string, requestInit: IRequestInit, responseType?: ResponseType) {
+  private async fetch(url: string, requestInit: IRequestInit, responseType?: ResponseType) {
     // 发送请求
     try {
       const response = await fetch(url, requestInit);
       // 有拦截器，执行拦截器
       if (this.resInterceptor) {
-        return this.resInterceptor(response,responseType, requestInit)
+        return this.resInterceptor(response, responseType, requestInit)
       } else {
         if (response.ok) {
           switch (responseType) {
@@ -98,38 +98,46 @@ class Request {
   // 处理RequestInit参数
   private async getRequestInit(url: string, method: Methods, data?: DataType, dataAndOptions: RequestOption = {}): Promise<[IRequestInit, string]> {
     const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
-    const headers = new Headers(Object.assign({}, this.headers, _headers));
-    const init: RequestInit&{headers:Headers} = {
-      headers,
+    const defaultHeaders: Record<string, string> = {}
+    const reqInit: RequestInit = {
       method,
       ...Object.assign({}, this.fetchOptions, fetchOptions),
     };
-    if (data) {
-      if (typeof data === "string" || typeof data === "number") {
-        url += `/${removeSlash(data + '')}`; //拼接url
-        if (body) {
-          if (isObject(body) || typeof body == "string") {
-            if (method === "GET") {
-              url = `${url}?${new URLSearchParams(body as any).toString()}`;
-            } else {
-              init.body = typeof body == "string" ? body : JSON.stringify(body)
-            }
-          } else {
-            init.body = body;
-          }
+    const dataIsString = typeof data === "string"
+
+    if (data === undefined || body && dataIsString) {
+      const bodyIsString = typeof body === "string"
+      if (isObject(body)) {
+        if (method === "GET") {
+          url = `${url}?${new URLSearchParams(body as any).toString()}`;
+          defaultHeaders['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8'
+        } else {
+          reqInit.body = JSON.stringify(body)
+          defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
         }
-      } else if (isObject(data) && typeof data == "string") {
-        init.body = typeof data == "string" ? data : JSON.stringify(data)
       } else {
-        init.body = data
+        if (bodyIsString) {
+          defaultHeaders['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8'
+        }
+        reqInit.body = body;
       }
     }
-    const _init = await this.reqInterceptor!(init)
-    return [_init, url]
+    if (dataIsString || typeof data === "number") {
+      url += `/${removeSlash(data + '')}`; //拼接url
+    } else if (isObject(data)) {
+      defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
+      reqInit.body = JSON.stringify(data)
+    } else {
+      reqInit.body = data
+      delete defaultHeaders['Content-Type'];
+    }
+    reqInit.headers = new Headers(Object.assign({}, this.headers, defaultHeaders, _headers));
+    const _reqInit = await this.reqInterceptor!(reqInit as IRequestInit)
+    return [_reqInit, url]
   }
   // 自定义url请求方法
   async request<T>(url: string, requestInit: RequestInit, responseType?: ResponseType): Promise<T> {
-    return await this.fetch(url,requestInit as IRequestInit,responseType)
+    return await this.fetch(url, requestInit as IRequestInit, responseType)
   }
   // 发送请求
   private async send(method: Methods, data?: DataType, dataAndOptions: RequestOption = {}) {
@@ -139,8 +147,8 @@ class Request {
   }
   /**
    * post请求
-   * @param {string|object} data - 请求体或者请求url
-   * @param {object} dataAndOptions - 请求fetch参数
+   * @param {DataType} data - 请求体或者请求url
+   * @param {RequestOption} dataAndOptions - 请求参数
    * @returns
    */
   post<R>(data?: DataType, dataAndOptions: RequestOption = {}): Promise<R> {
@@ -148,8 +156,8 @@ class Request {
   }
   /**
    * 删除
-   * @param {string|object} data - 需要删除记录的id
-   * @param {object} dataAndOptions - 请求fetch参数
+   * @param {DataType} data - 需要删除记录的id
+   * @param {RequestOption} dataAndOptions - 请求参数
    * @returns
    */
   delete<R>(data?: DataType, dataAndOptions: RequestOption = {}): Promise<R> {
@@ -157,8 +165,8 @@ class Request {
   }
   /**
    * 更新update 方法
-   * @param {string|object} data - 需要更新记录的或者请求url
-   * @param {object} dataAndOptions - 请求fetch参数
+   * @param {DataType} data - 需要更新记录的或者请求url
+   * @param {RequestOption} dataAndOptions - 请求参数
    * @returns
    */
   put<R>(data?: DataType, dataAndOptions: RequestOption = {}): Promise<R> {
@@ -166,9 +174,9 @@ class Request {
   }
   /**
   /**
-   * 更新patch 方法
-   * @param {string|object} data - 需要更新记录的或者请求url
-   * @param {object} dataAndOptions - 请求fetch参数
+   * patch
+   * @param {DataType} data - 需要更新记录的或者请求url
+   * @param {RequestOption} dataAndOptions - 请求参数
    * @returns
    */
   patch<R>(data?: DataType, dataAndOptions: RequestOption = {}): Promise<R> {
@@ -176,8 +184,8 @@ class Request {
   }
   /**
    * 条件查询
-   * @param {string|object} data 查询的条件参数
-   * @param {object} dataAndOptions - 请求fetch参数
+   * @param {DataType} data 查询的条件参数
+   * @param {RequestOption} dataAndOptions - 请求参数
    * @returns
    */
   get<R>(data?: DataType, dataAndOptions: RequestOption = {}): Promise<R> {

@@ -42,37 +42,37 @@ declare class Request {
     private send;
     /**
      * post请求
-     * @param {string|object} data - 请求体或者请求url
-     * @param {object} dataAndOptions - 请求fetch参数
+     * @param {DataType} data - 请求体或者请求url
+     * @param {RequestOption} dataAndOptions - 请求参数
      * @returns
      */
     post<R>(data?: DataType, dataAndOptions?: RequestOption): Promise<R>;
     /**
      * 删除
-     * @param {string|object} data - 需要删除记录的id
-     * @param {object} dataAndOptions - 请求fetch参数
+     * @param {DataType} data - 需要删除记录的id
+     * @param {RequestOption} dataAndOptions - 请求参数
      * @returns
      */
     delete<R>(data?: DataType, dataAndOptions?: RequestOption): Promise<R>;
     /**
      * 更新update 方法
-     * @param {string|object} data - 需要更新记录的或者请求url
-     * @param {object} dataAndOptions - 请求fetch参数
+     * @param {DataType} data - 需要更新记录的或者请求url
+     * @param {RequestOption} dataAndOptions - 请求参数
      * @returns
      */
     put<R>(data?: DataType, dataAndOptions?: RequestOption): Promise<R>;
     /**
     /**
-     * 更新patch 方法
-     * @param {string|object} data - 需要更新记录的或者请求url
-     * @param {object} dataAndOptions - 请求fetch参数
+     * patch
+     * @param {DataType} data - 需要更新记录的或者请求url
+     * @param {RequestOption} dataAndOptions - 请求参数
      * @returns
      */
     patch<R>(data?: DataType, dataAndOptions?: RequestOption): Promise<R>;
     /**
      * 条件查询
-     * @param {string|object} data 查询的条件参数
-     * @param {object} dataAndOptions - 请求fetch参数
+     * @param {DataType} data 查询的条件参数
+     * @param {RequestOption} dataAndOptions - 请求参数
      * @returns
      */
     get<R>(data?: DataType, dataAndOptions?: RequestOption): Promise<R>;

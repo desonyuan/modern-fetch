@@ -17,7 +17,7 @@ type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers"> //fetch RequestInit 剔除body、method、headers选项。
 type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer" //响应数据类型
 
-type RequestOption = { headers?: HeaderType; fetchOptions?: IFetchOption; responseType?: ResponseType, data?: DataType }
+type RequestOption = { headers?: HeaderType; fetchOptions?: IFetchOption; responseType?: ResponseType, data?: DataType } //调用请求方法的第二个参数
 
 interface IFactoryOption {
   headers?: HeaderType
