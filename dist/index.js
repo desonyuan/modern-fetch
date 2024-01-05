@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RestfulFetch = exports.request = void 0;
+exports.ModernFetch = exports.request = void 0;
 /**
  * 删除字符串两边的'/'
  * @param {string} str
@@ -187,14 +187,14 @@ class Request {
     }
 }
 /**
- * 构造RestfulFetch实例，通常需要传入BaseUrl
+ * 构造ModernFetch实例，通常需要传入BaseUrl
  */
-class RestfulFetch {
+class ModernFetch {
     constructor(options = {}) {
         this.options = options;
     }
     /**
-     * 创建基于RestfulFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
+     * 创建基于ModernFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
      * @param url 请求url
      * @returns Request 实例
      */
@@ -216,4 +216,4 @@ class RestfulFetch {
         return new Request({ url, ...props });
     }
 }
-exports.RestfulFetch = RestfulFetch;
+exports.ModernFetch = ModernFetch;

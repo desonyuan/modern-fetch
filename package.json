@@ -1,13 +1,13 @@
 {
-  "name": "@deson/fetch",
-  "version": "3.1.1",
+  "name": "modern-fetch",
+  "version": "1.0.0",
   "description": "一个基于fetch api封装的restful请求风格的简易http请求库",
   "author": "desonyuan",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/desonyuan/deson-fetch"
+    "url": "https://github.com/desonyuan/modern-fetch"
   },
   "scripts": {
     "publish": "tsc&&npm publish"

@@ -5,7 +5,7 @@ type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer";
 type IRequestInit = RequestInit & {
     headers: Headers;
 };
-type RestfulFetchFactoryBaseUrl = {
+type ModernFetchFactoryBaseUrl = {
     baseUrl?: string;
     prefix?: string;
 };
@@ -78,13 +78,13 @@ declare class Request {
     get<R>(data?: DataType, dataAndOptions?: RequestOption): Promise<R>;
 }
 /**
- * 构造RestfulFetch实例，通常需要传入BaseUrl
+ * 构造ModernFetch实例，通常需要传入BaseUrl
  */
-export declare class RestfulFetch {
+export declare class ModernFetch {
     private readonly options;
-    constructor(options?: IFactoryOption & RestfulFetchFactoryBaseUrl);
+    constructor(options?: IFactoryOption & ModernFetchFactoryBaseUrl);
     /**
-     * 创建基于RestfulFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
+     * 创建基于ModernFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
      * @param url 请求url
      * @returns Request 实例
      */

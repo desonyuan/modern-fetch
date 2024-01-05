@@ -1,11 +1,11 @@
 # 使用说明
 
-DesonFeth是一款基于fetch api 轻封装的http请求库，封装了一些restful api请求的常用方法，没有任何其他依赖，源码也易懂，完全是我个人的风格习惯,适用于browser、nodejs>=18、bun、deno、react native。
+ModernFetch是一款基于fetch api 轻封装的http请求库，封装了一些restful api请求的常用方法，没有任何其他依赖，源码也易懂，完全是我个人的风格习惯,适用于browser、nodejs>=18、bun、deno、react native。
 
 ### 安装npm包
 
 ```typescript
-npm install @deson/fetch --save
+npm install modern-fetch --save
 ```
 
 ### 内部的类型定义
@@ -31,8 +31,8 @@ interface IFactoryOption {
 ```
 ### 使用示例
 ```typescript
-//初始化，构造基础实例对象 构造参数为可选参数  new RestfulFetch(options?:IFactoryOption)
-export const CommonHttp = new RestfulFetch({
+//初始化，构造基础实例对象 构造参数为可选参数  new ModernFetch(options?:IFactoryOption)
+export const CommonHttp = new ModernFetch({
   baseUrl: 'http://www.baidu.com',//该实例的请求地址
   prefix: 'api', //请求前缀
   fetchOptions: {
@@ -105,6 +105,3 @@ PostApi.request(url: string, requestInit:RequestInit,responseType?: ResponseType
 ```
 ### fetch api 使用参考
 [fetch api MDN](https://developer.mozilla.org/en-US/docs/Web/API/fetch#syntax)
-
-
-

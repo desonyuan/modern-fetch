@@ -5,7 +5,7 @@ type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">
 type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"
 type IRequestInit = RequestInit & { headers: Headers }
-type RestfulFetchFactoryBaseUrl = {
+type ModernFetchFactoryBaseUrl = {
   baseUrl?: string;
   prefix?: string,
 }
@@ -203,14 +203,14 @@ class Request {
   }
 }
 /**
- * 构造RestfulFetch实例，通常需要传入BaseUrl
+ * 构造ModernFetch实例，通常需要传入BaseUrl
  */
-export class RestfulFetch {
-  constructor(private readonly options: IFactoryOption & RestfulFetchFactoryBaseUrl = {}) {
+export class ModernFetch {
+  constructor(private readonly options: IFactoryOption & ModernFetchFactoryBaseUrl = {}) {
   }
 
   /**
-   * 创建基于RestfulFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
+   * 创建基于ModernFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
    * @param url 请求url
    * @returns Request 实例
    */
