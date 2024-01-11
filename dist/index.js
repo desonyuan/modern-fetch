@@ -76,7 +76,9 @@ class Request {
     // 处理RequestInit参数
     async getRequestInit(url, method, data, dataAndOptions = {}) {
         const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
-        const defaultHeaders = {};
+        const defaultHeaders = {
+            "Content-Type": "application/x-www-form-urlencoded"
+        };
         const reqInit = {
             method,
             ...Object.assign({}, this.fetchOptions, fetchOptions),

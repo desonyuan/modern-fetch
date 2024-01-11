@@ -124,7 +124,7 @@ class Request {
             defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
             _body = JSON.stringify(body)
           }
-          reqInit.body = _body;
+          reqInit.body = _body as RequestInit['body'];
         }
       }
     }
@@ -137,7 +137,7 @@ class Request {
           defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
           reqInit.body = JSON.stringify(data)
         } else {
-          reqInit.body = data
+          reqInit.body = data as RequestInit['body'];
         }
       }
     }else{

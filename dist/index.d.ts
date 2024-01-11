@@ -1,4 +1,4 @@
-type DataType = RequestInit['body'];
+type DataType = RequestInit['body'] | Record<any, any>;
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">;
 type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer";
