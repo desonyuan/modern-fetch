@@ -1,6 +1,6 @@
 
 type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
-type DataType = RequestInit['body'];
+type DataType = RequestInit['body']|Record<any,any>;
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">
 type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"
@@ -98,7 +98,9 @@ class Request {
   // 处理RequestInit参数
   private async getRequestInit(url: string, method: Methods, data?: DataType, dataAndOptions: RequestOption = {}): Promise<[IRequestInit, string]> {
     const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
-    const defaultHeaders: Record<string, string> = {}
+    const defaultHeaders: Record<string, string> = {
+      "Content-Type":"application/x-www-form-urlencoded"
+    }
     const reqInit: RequestInit = {
       method,
       ...Object.assign({}, this.fetchOptions, fetchOptions),
