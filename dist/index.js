@@ -106,9 +106,9 @@ class Request {
             }
         };
         if (data) {
-            const dataIsString = typeof data === "string";
-            if (dataIsString || typeof data === "number") {
-                url += `/${removeSlash(data + '')}`; //拼接url
+            const dataIsString = typeof data === "string" || typeof data === "number";
+            if (dataIsString) {
+                url += `/${removeSlash(data.toString())}`; //拼接url
                 bodyHandler(body);
             }
             else {
