@@ -76,56 +76,47 @@ class Request {
     // 处理RequestInit参数
     async getRequestInit(url, method, data, dataAndOptions = {}) {
         const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
-        const defaultHeaders = {
-            "Content-Type": "application/x-www-form-urlencoded"
-        };
+        const defaultHeaders = {};
         const reqInit = {
             method,
             ...Object.assign({}, this.fetchOptions, fetchOptions),
         };
-        const dataIsString = typeof data === "string";
-        const bodyIsString = typeof body === "string";
-        const bodyHandler = () => {
-            if (body) {
-                if (isObject(body)) {
+        const bodyHandler = (paramData) => {
+            if (paramData) {
+                if (isObject(paramData)) {
                     if (method === "GET") {
-                        url = `${url}?${new URLSearchParams(body).toString()}`;
+                        url = `${url}?${new URLSearchParams(paramData).toString()}`;
                     }
                     else {
-                        reqInit.body = JSON.stringify(body);
                         defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
+                        reqInit.body = JSON.stringify(paramData);
                     }
                 }
                 else {
-                    let _body = body;
-                    if (bodyIsString) {
+                    const paramDataIsString = typeof body === "string";
+                    if (paramDataIsString) {
                         defaultHeaders['Content-Type'] = 'text/plain;charset=utf-8';
+                        reqInit.body = paramData;
                     }
-                    else if (Array.isArray(body)) {
+                    else if (Array.isArray(paramData)) {
                         defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
-                        _body = JSON.stringify(body);
+                        reqInit.body = JSON.stringify(paramData);
                     }
-                    reqInit.body = _body;
                 }
             }
         };
         if (data) {
+            const dataIsString = typeof data === "string";
             if (dataIsString || typeof data === "number") {
                 url += `/${removeSlash(data + '')}`; //拼接url
-                bodyHandler();
+                bodyHandler(body);
             }
             else {
-                if (isObject(data) || Array.isArray(data)) {
-                    defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
-                    reqInit.body = JSON.stringify(data);
-                }
-                else {
-                    reqInit.body = data;
-                }
+                bodyHandler(data);
             }
         }
         else {
-            bodyHandler();
+            bodyHandler(body);
         }
         reqInit.headers = new Headers(Object.assign({}, this.headers, defaultHeaders, _headers));
         const _reqInit = await this.reqInterceptor(reqInit);
