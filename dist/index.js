@@ -102,6 +102,9 @@ class Request {
                         defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
                         reqInit.body = JSON.stringify(paramData);
                     }
+                    else {
+                        reqInit.body = paramData;
+                    }
                 }
             }
         };
