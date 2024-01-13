@@ -126,7 +126,6 @@ class Request {
         }
       }
     }
-
     if(data){
       const dataIsString = typeof data === "string";
       if (dataIsString || typeof data === "number") {
