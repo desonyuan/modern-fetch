@@ -93,7 +93,7 @@ class Request {
                     }
                 }
                 else {
-                    const paramDataIsString = typeof body === "string";
+                    const paramDataIsString = typeof paramData === "string";
                     if (paramDataIsString) {
                         defaultHeaders['Content-Type'] = 'text/plain;charset=utf-8';
                         reqInit.body = paramData;
