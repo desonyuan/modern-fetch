@@ -1,6 +1,6 @@
 
 type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
-type DataType = RequestInit['body']|Record<any,any>;
+type DataType = RequestInit['body']|Record<any,any>|number;
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">
 type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"
@@ -127,9 +127,9 @@ class Request {
       }
     }
     if(data){
-      const dataIsString = typeof data === "string";
-      if (dataIsString || typeof data === "number") {
-        url += `/${removeSlash(data + '')}`; //拼接url
+      const dataIsString = typeof data === "string"||typeof data === "number";
+      if (dataIsString) {
+        url += `/${removeSlash(data.toString())}`; //拼接url
         bodyHandler(body)
       }else{
         bodyHandler(data)
