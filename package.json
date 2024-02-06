@@ -1,6 +1,6 @@
 {
   "name": "modern-fetch",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "description": "一个基于fetch api封装的restful请求风格的简易http请求库",
   "author": "desonyuan",
   "main": "dist/index.js",
@@ -10,7 +10,7 @@
     "url": "https://github.com/desonyuan/modern-fetch"
   },
   "scripts": {
-    "publish": "tsc&&npm publish"
+    "build": "tsc"
   },
   "keywords": [
     "fetch",

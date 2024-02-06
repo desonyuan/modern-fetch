@@ -14,7 +14,7 @@ interface IFactoryOption {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
   reqInterceptor?: (requestInit: IRequestInit) => Promise<IRequestInit>
-  resInterceptor?: (response: Response, responseType?: ResponseType, requestInit?: IRequestInit) => Promise<any>
+  resInterceptor?: (response: Response, responseType?: ResponseType, request?:<T=any>()=>Promise<T>) => Promise<any>
   errInterceptor?: (err: any) => void
 }
 
@@ -63,16 +63,18 @@ class Request {
     this.url = url
   }
   // 发送请求
-  private async fetch(url: string, requestInit: IRequestInit, responseType?: ResponseType) {
+  private async fetch(url: string, requestInit: IRequestInit, responseType?: ResponseType):Promise<any> {
     // 发送请求
     try {
       const response = await fetch(url, requestInit);
       // 有拦截器，执行拦截器
       if (this.resInterceptor) {
-        return this.resInterceptor(response, responseType, requestInit)
+        return this.resInterceptor(response, responseType, this.fetch.bind(this,url,requestInit,responseType))
       } else {
         if (response.ok) {
           switch (responseType) {
+            case "json":
+              return await response.json()
             case "text":
               return await response.text()
             case "blob":
@@ -82,7 +84,7 @@ class Request {
             case "arrayBuffer":
               return await response.arrayBuffer()
             default:
-              return await response.json()
+              return response
           }
         } else {
           return Promise.reject(response)
@@ -123,7 +125,7 @@ class Request {
             defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
             reqInit.body = JSON.stringify(paramData)
           }else{
-            reqInit.body=paramData as any
+            reqInit.body=paramData as RequestInit['body']
           }
         }
       }

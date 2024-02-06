@@ -13,7 +13,7 @@ interface IFactoryOption {
     headers?: HeaderType;
     fetchOptions?: IFetchOption;
     reqInterceptor?: (requestInit: IRequestInit) => Promise<IRequestInit>;
-    resInterceptor?: (response: Response, responseType?: ResponseType, requestInit?: IRequestInit) => Promise<any>;
+    resInterceptor?: (response: Response, responseType?: ResponseType, request?: <T = any>() => Promise<T>) => Promise<any>;
     errInterceptor?: (err: any) => void;
 }
 type RequestOption = {

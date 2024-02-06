@@ -23,7 +23,7 @@ interface IFactoryOption {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
   reqInterceptor?: (config: RequestInit) => Promise<RequestInit>
-  resInterceptor?: (response: Response,responseType?:ResponseType, options?: RequestInit) => Promise<any>
+  resInterceptor?: (response: Response, responseType?: ResponseType, requestInit?: IRequestInit,request?:<T=any>()=>Promise<T>/* 这个request可以再次发起请求，这对于双token，其中一个token失效时，可以使用该request发起请求*/ */) => Promise<any>
   errInterceptor?: (err: any) => void
   baseUrl?: string;
   prefix?: string,
@@ -52,7 +52,7 @@ export const CommonHttp = new ModernFetch({
    *响应拦截器 如果传入该函数，则会在请求成功后执行该函数，例如处理请求成功后的响应数据
   *@return Promise<any>
   */
-  async resInterceptor(response,responseType, requestInit) {
+  async resInterceptor(response,responseType, request/* request是一个函数，可以再次发起请求 */) {
     // 请求成功示例
     if (response.ok) {
       if(responseType === 'json'){
@@ -95,7 +95,7 @@ PostApi.post(new FormData())
 PostApi.post('file',{data:new Blob()})
 //示例6：发送ArrayBuffer
 PostApi.post(ArrayBuffer)
-//示例6：文件下载 http://www.baidu.com/api/news/pic.jpge
+//示例7：文件下载 http://www.baidu.com/api/news/pic.jpge
 PostApi.get('pic.jpge',{responseType:'blob'})
 ```
 ### 自定义Url请求

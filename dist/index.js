@@ -44,11 +44,13 @@ class Request {
             const response = await fetch(url, requestInit);
             // 有拦截器，执行拦截器
             if (this.resInterceptor) {
-                return this.resInterceptor(response, responseType, requestInit);
+                return this.resInterceptor(response, responseType, this.fetch.bind(this, url, requestInit, responseType));
             }
             else {
                 if (response.ok) {
                     switch (responseType) {
+                        case "json":
+                            return await response.json();
                         case "text":
                             return await response.text();
                         case "blob":
@@ -58,7 +60,7 @@ class Request {
                         case "arrayBuffer":
                             return await response.arrayBuffer();
                         default:
-                            return await response.json();
+                            return response;
                     }
                 }
                 else {
