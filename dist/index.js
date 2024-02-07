@@ -25,9 +25,9 @@ class Request {
         const { headers, resInterceptor, errInterceptor, reqInterceptor, fetchOptions, url } = options;
         this.resInterceptor = resInterceptor;
         this.errInterceptor = errInterceptor;
-        this.reqInterceptor = async (config, url) => {
+        this.reqInterceptor = async (config, reqUrl) => {
             if (reqInterceptor) {
-                return await reqInterceptor(config, url);
+                return await reqInterceptor(config, reqUrl);
             }
             else {
                 return config;
