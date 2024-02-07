@@ -13,7 +13,7 @@ type ModernFetchFactoryBaseUrl = {
 interface IFactoryOption {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
-  reqInterceptor?: (requestInit: IRequestInit) => Promise<IRequestInit>
+  reqInterceptor?: (requestInit: IRequestInit,url?: string) => Promise<IRequestInit>
   resInterceptor?: (response: Response, responseType?: ResponseType, request?:<T=any>()=>Promise<T>) => Promise<any>
   errInterceptor?: (err: any) => void
 }
@@ -51,9 +51,9 @@ class Request {
     const { headers, resInterceptor, errInterceptor, reqInterceptor, fetchOptions, url } = options;
     this.resInterceptor = resInterceptor;
     this.errInterceptor = errInterceptor;
-    this.reqInterceptor = async (config) => {
+    this.reqInterceptor = async (config,url?:string) => {
       if (reqInterceptor) {
-        return await reqInterceptor(config)
+        return await reqInterceptor(config,url)
       } else {
         return config
       }
@@ -64,9 +64,10 @@ class Request {
   }
   // 发送请求
   private async fetch(url: string, requestInit: IRequestInit, responseType?: ResponseType):Promise<any> {
+    const reqInit=await this.reqInterceptor!(requestInit,url)
     // 发送请求
     try {
-      const response = await fetch(url, requestInit);
+      const response = await fetch(url, reqInit);
       // 有拦截器，执行拦截器
       if (this.resInterceptor) {
         return this.resInterceptor(response, responseType, this.fetch.bind(this,url,requestInit,responseType))
@@ -142,8 +143,8 @@ class Request {
       bodyHandler(body)
     }
     reqInit.headers = new Headers(Object.assign({}, this.headers, defaultHeaders, _headers));
-    const _reqInit = await this.reqInterceptor!(reqInit as IRequestInit)
-    return [_reqInit, url]
+    // const _reqInit = await this.reqInterceptor!(reqInit as IRequestInit)
+    return [reqInit as IRequestInit, url]
   }
   // 自定义url请求方法
   async request<T>(url: string, requestInit: RequestInit, responseType?: ResponseType): Promise<T> {
@@ -151,9 +152,9 @@ class Request {
   }
   // 发送请求
   private async send(method: Methods, data?: DataType, dataAndOptions: RequestOption = {}) {
-    const [init, url] = await this.getRequestInit(this.url, method, data, dataAndOptions);
+    const [requestInit, url] = await this.getRequestInit(this.url, method, data, dataAndOptions);
     const { responseType } = dataAndOptions
-    return this.fetch(url, init, responseType)
+    return this.fetch(url, requestInit, responseType)
   }
   /**
    * post请求

@@ -12,7 +12,7 @@ type ModernFetchFactoryBaseUrl = {
 interface IFactoryOption {
     headers?: HeaderType;
     fetchOptions?: IFetchOption;
-    reqInterceptor?: (requestInit: IRequestInit) => Promise<IRequestInit>;
+    reqInterceptor?: (requestInit: IRequestInit, url?: string) => Promise<IRequestInit>;
     resInterceptor?: (response: Response, responseType?: ResponseType, request?: <T = any>() => Promise<T>) => Promise<any>;
     errInterceptor?: (err: any) => void;
 }

@@ -25,9 +25,9 @@ class Request {
         const { headers, resInterceptor, errInterceptor, reqInterceptor, fetchOptions, url } = options;
         this.resInterceptor = resInterceptor;
         this.errInterceptor = errInterceptor;
-        this.reqInterceptor = async (config) => {
+        this.reqInterceptor = async (config, url) => {
             if (reqInterceptor) {
-                return await reqInterceptor(config);
+                return await reqInterceptor(config, url);
             }
             else {
                 return config;
@@ -39,9 +39,10 @@ class Request {
     }
     // 发送请求
     async fetch(url, requestInit, responseType) {
+        const reqInit = await this.reqInterceptor(requestInit, url);
         // 发送请求
         try {
-            const response = await fetch(url, requestInit);
+            const response = await fetch(url, reqInit);
             // 有拦截器，执行拦截器
             if (this.resInterceptor) {
                 return this.resInterceptor(response, responseType, this.fetch.bind(this, url, requestInit, responseType));
@@ -124,8 +125,8 @@ class Request {
             bodyHandler(body);
         }
         reqInit.headers = new Headers(Object.assign({}, this.headers, defaultHeaders, _headers));
-        const _reqInit = await this.reqInterceptor(reqInit);
-        return [_reqInit, url];
+        // const _reqInit = await this.reqInterceptor!(reqInit as IRequestInit)
+        return [reqInit, url];
     }
     // 自定义url请求方法
     async request(url, requestInit, responseType) {
@@ -133,9 +134,9 @@ class Request {
     }
     // 发送请求
     async send(method, data, dataAndOptions = {}) {
-        const [init, url] = await this.getRequestInit(this.url, method, data, dataAndOptions);
+        const [requestInit, url] = await this.getRequestInit(this.url, method, data, dataAndOptions);
         const { responseType } = dataAndOptions;
-        return this.fetch(url, init, responseType);
+        return this.fetch(url, requestInit, responseType);
     }
     /**
      * post请求
