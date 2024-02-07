@@ -15,7 +15,7 @@ type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
 type DataType = RequestInit['body'];
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers"> //fetch RequestInit 剔除body、method、headers选项。
-type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer" //响应数据类型
+type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"| undefined //响应数据类型
 
 type RequestOption = { headers?: HeaderType; fetchOptions?: IFetchOption; responseType?: ResponseType, data?: DataType } //调用请求方法的第二个参数
 
@@ -23,7 +23,7 @@ interface IFactoryOption {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
   reqInterceptor?: (config: RequestInit) => Promise<RequestInit>
-  resInterceptor?: (response: Response, responseType?: ResponseType, requestInit?: IRequestInit,request?:<T=any>()=>Promise<T>/* 这个request可以再次发起请求，这对于双token，其中一个token失效时，可以使用该request发起请求*/ */) => Promise<any>
+  resInterceptor?: (response: Response, responseType: ResponseType,reTry:<T=any>()=>Promise<T>/* 这个reTry方法再次发起本次请求，这对于双token方案很有用 */) => Promise<any>
   errInterceptor?: (err: any) => void
   baseUrl?: string;
   prefix?: string,
@@ -44,7 +44,7 @@ export const CommonHttp = new ModernFetch({
    *@return RequestInit
   */
  async resInterceptor(config:RequestInit){
-  config.headers.append('token', '123456');
+  config.headers.set('token', '123456');
   return config
  }
 
@@ -52,7 +52,7 @@ export const CommonHttp = new ModernFetch({
    *响应拦截器 如果传入该函数，则会在请求成功后执行该函数，例如处理请求成功后的响应数据
   *@return Promise<any>
   */
-  async resInterceptor(response,responseType, request/* request是一个函数，可以再次发起请求 */) {
+  async resInterceptor(response,responseType, reTry/* reTry是一个函数，可以再次发起本次请求 */) {
     // 请求成功示例
     if (response.ok) {
       if(responseType === 'json'){
@@ -61,6 +61,11 @@ export const CommonHttp = new ModernFetch({
         return await response.text()
       }else{
         // other processing
+      }
+      // 重新请求示例: 举例-双token方案，refresh token过期，
+      if(response.status === 401){
+        await RefreshToken();
+        return await reTry();
       }
     } else {
       return Promise.reject(response);

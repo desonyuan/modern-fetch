@@ -3,7 +3,7 @@ type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
 type DataType = RequestInit['body']|Record<any,any>|number;
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">
-type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"
+type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"| undefined
 type IRequestInit = RequestInit & { headers: Headers }
 type ModernFetchFactoryBaseUrl = {
   baseUrl?: string;
@@ -14,7 +14,7 @@ interface IFactoryOption {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
   reqInterceptor?: (requestInit: IRequestInit,url?: string) => Promise<IRequestInit>
-  resInterceptor?: (response: Response, responseType?: ResponseType, request?:<T=any>()=>Promise<T>) => Promise<any>
+  resInterceptor?: (response: Response, responseType: ResponseType, reTry:<T=any>()=>Promise<T>) => Promise<any>
   errInterceptor?: (err: any) => void
 }
 
