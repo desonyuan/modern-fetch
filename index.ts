@@ -111,7 +111,7 @@ class Request {
       if (_paramData) {
         const paramData = this.transform ? this.transform(_paramData, method, url) : _paramData
         if (isObject(paramData)) {
-          if (method === "GET") {
+          if (method === "GET"&&paramData.keys().length>0) {
             url = `${url}?${new URLSearchParams(paramData as any).toString()}`;
           } else {
             defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
