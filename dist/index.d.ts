@@ -102,6 +102,11 @@ export declare class ModernFetch {
      */
     addErrInterceptor(interceptor: IFactoryOption["errInterceptor"]): void;
     /**
+    * 添加请求参数处理 运行在 reqInterceptor 前面
+    * @param interceptor 请求参数处理
+    */
+    addTransform(transform: IFactoryOption["transform"]): void;
+    /**
      * 创建基于ModernFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
      * @param url 请求url
      * @returns Request 实例
