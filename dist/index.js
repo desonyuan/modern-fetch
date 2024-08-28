@@ -1,4 +1,24 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ModernFetch = exports.request = void 0;
 /**
@@ -32,105 +52,115 @@ class Request {
         this.url = url;
     }
     // 发送请求
-    async fetch(url, requestInit, responseType) {
-        const reqInit = this.reqInterceptor ? await this.reqInterceptor(requestInit, url) : requestInit;
-        // 发送请求
-        try {
-            const response = await fetch(url, reqInit);
-            // 有拦截器，执行拦截器
-            if (this.resInterceptor) {
-                return this.resInterceptor(response, responseType, this.fetch.bind(this, url, requestInit, responseType));
-            }
-            else {
-                if (response.ok) {
-                    switch (responseType) {
-                        case "json":
-                            return await response.json();
-                        case "text":
-                            return await response.text();
-                        case "blob":
-                            return await response.blob();
-                        case "formData":
-                            return await response.formData();
-                        case "arrayBuffer":
-                            return await response.arrayBuffer();
-                        default:
-                            return response;
-                    }
+    fetch(url, requestInit, responseType) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const reqInit = this.reqInterceptor ? yield this.reqInterceptor(requestInit, url) : requestInit;
+            // 发送请求
+            try {
+                const response = yield fetch(url, reqInit);
+                // 有拦截器，执行拦截器
+                if (this.resInterceptor) {
+                    return this.resInterceptor(response, responseType, this.fetch.bind(this, url, requestInit, responseType));
                 }
                 else {
-                    return Promise.reject(response);
+                    if (response.ok) {
+                        switch (responseType) {
+                            case "json":
+                                return yield response.json();
+                            case "text":
+                                return yield response.text();
+                            case "blob":
+                                return yield response.blob();
+                            case "formData":
+                                return yield response.formData();
+                            case "arrayBuffer":
+                                return yield response.arrayBuffer();
+                            default:
+                                return response;
+                        }
+                    }
+                    else {
+                        return Promise.reject(response);
+                    }
                 }
             }
-        }
-        catch (err) {
-            if (this.errInterceptor) {
-                this.errInterceptor(err);
+            catch (err) {
+                if (this.errInterceptor) {
+                    this.errInterceptor(err);
+                }
+                return Promise.reject(err);
             }
-            return Promise.reject(err);
-        }
+        });
     }
     // 处理RequestInit参数
-    async getRequestInit(url, method, data, dataAndOptions = {}) {
-        const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
-        const defaultHeaders = {};
-        const reqInit = {
-            method,
-            ...Object.assign({}, this.fetchOptions, fetchOptions),
-        };
-        const bodyHandler = (_paramData) => {
-            if (_paramData) {
-                const paramData = this.transform ? this.transform(_paramData, method, url) : _paramData;
-                if (isObject(paramData)) {
-                    if (method === "GET" && paramData.keys().length > 0) {
-                        url = `${url}?${new URLSearchParams(paramData).toString()}`;
+    getRequestInit(url, method, data, dataAndOptions = {}) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
+            const defaultHeaders = {};
+            const reqInit = Object.assign({ method }, Object.assign({}, this.fetchOptions, fetchOptions));
+            const bodyHandler = (_paramData) => {
+                if (_paramData) {
+                    const paramData = this.transform ? this.transform(_paramData, method, url) : _paramData;
+                    const isGet = method === "GET";
+                    if (isObject(paramData)) {
+                        if (isGet) {
+                            if (Object.keys(paramData).length > 0) {
+                                url = `${url}?${new URLSearchParams(paramData).toString()}`;
+                            }
+                        }
+                        else {
+                            defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
+                            reqInit.body = JSON.stringify(paramData);
+                        }
                     }
                     else {
-                        defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
-                        reqInit.body = JSON.stringify(paramData);
+                        if (!isGet) {
+                            const paramDataIsString = typeof paramData === "string";
+                            if (paramDataIsString) {
+                                defaultHeaders['Content-Type'] = 'text/plain;charset=utf-8';
+                                reqInit.body = paramData;
+                            }
+                            else if (Array.isArray(paramData)) {
+                                defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
+                                reqInit.body = JSON.stringify(paramData);
+                            }
+                            else {
+                                reqInit.body = paramData;
+                            }
+                        }
                     }
+                }
+            };
+            if (data) {
+                const dataIsString = typeof data === "string" || typeof data === "number";
+                if (dataIsString) {
+                    url += `/${removeSlash(data.toString())}`; //拼接url
+                    bodyHandler(body);
                 }
                 else {
-                    const paramDataIsString = typeof paramData === "string";
-                    if (paramDataIsString) {
-                        defaultHeaders['Content-Type'] = 'text/plain;charset=utf-8';
-                        reqInit.body = paramData;
-                    }
-                    else if (Array.isArray(paramData)) {
-                        defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
-                        reqInit.body = JSON.stringify(paramData);
-                    }
-                    else {
-                        reqInit.body = paramData;
-                    }
+                    bodyHandler(data);
                 }
             }
-        };
-        if (data) {
-            const dataIsString = typeof data === "string" || typeof data === "number";
-            if (dataIsString) {
-                url += `/${removeSlash(data.toString())}`; //拼接url
+            else {
                 bodyHandler(body);
             }
-            else {
-                bodyHandler(data);
-            }
-        }
-        else {
-            bodyHandler(body);
-        }
-        reqInit.headers = new Headers(Object.assign({}, this.headers, defaultHeaders, _headers));
-        return [reqInit, url];
+            reqInit.headers = new Headers(Object.assign({}, this.headers, defaultHeaders, _headers));
+            return [reqInit, url];
+        });
     }
     // 自定义url请求方法
-    async request(url, requestInit, responseType) {
-        return await this.fetch(url, requestInit, responseType);
+    request(url, requestInit, responseType) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.fetch(url, requestInit, responseType);
+        });
     }
     // 发送请求
-    async send(method, data, dataAndOptions = {}) {
-        const [requestInit, url] = await this.getRequestInit(this.url, method, data, dataAndOptions);
-        const { responseType } = dataAndOptions;
-        return this.fetch(url, requestInit, responseType);
+    send(method, data, dataAndOptions = {}) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const [requestInit, url] = yield this.getRequestInit(this.url, method, data, dataAndOptions);
+            const { responseType } = dataAndOptions;
+            return this.fetch(url, requestInit, responseType);
+        });
     }
     /**
      * post请求
@@ -220,7 +250,7 @@ class ModernFetch {
      * @returns Request 实例
      */
     create(url = '') {
-        const { baseUrl, prefix, ...props } = this.options;
+        const _a = this.options, { baseUrl, prefix } = _a, props = __rest(_a, ["baseUrl", "prefix"]);
         if (prefix) {
             if (baseUrl) {
                 url = `${removeSlash(baseUrl)}/${removeSlash(prefix)}${url}`;
@@ -234,7 +264,7 @@ class ModernFetch {
                 url = `${removeSlash(baseUrl)}${url}`;
             }
         }
-        return new Request({ url, ...props });
+        return new Request(Object.assign({ url }, props));
     }
 }
 exports.ModernFetch = ModernFetch;

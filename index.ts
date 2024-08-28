@@ -63,7 +63,7 @@ class Request {
 
   // 发送请求
   private async fetch(url: string, requestInit: IRequestInit, responseType?: ResponseType): Promise<any> {
-    const reqInit =this.reqInterceptor? await this.reqInterceptor(requestInit, url):requestInit
+    const reqInit = this.reqInterceptor ? await this.reqInterceptor(requestInit, url) : requestInit
     // 发送请求
     try {
       const response = await fetch(url, reqInit);
@@ -110,23 +110,29 @@ class Request {
     const bodyHandler = (_paramData?: DataType) => {
       if (_paramData) {
         const paramData = this.transform ? this.transform(_paramData, method, url) : _paramData
+        const isGet = method === "GET";
+
         if (isObject(paramData)) {
-          if (method === "GET"&&paramData.keys().length>0) {
-            url = `${url}?${new URLSearchParams(paramData as any).toString()}`;
+          if (isGet) {
+            if (Object.keys(paramData).length > 0) {
+              url = `${url}?${new URLSearchParams(paramData as any).toString()}`;
+            }
           } else {
             defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
             reqInit.body = JSON.stringify(paramData)
           }
         } else {
-          const paramDataIsString = typeof paramData === "string";
-          if (paramDataIsString) {
-            defaultHeaders['Content-Type'] = 'text/plain;charset=utf-8'
-            reqInit.body = paramData as string
-          } else if (Array.isArray(paramData)) {
-            defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
-            reqInit.body = JSON.stringify(paramData)
-          } else {
-            reqInit.body = paramData as RequestInit['body']
+          if (!isGet) {
+            const paramDataIsString = typeof paramData === "string";
+            if (paramDataIsString) {
+              defaultHeaders['Content-Type'] = 'text/plain;charset=utf-8'
+              reqInit.body = paramData as string
+            } else if (Array.isArray(paramData)) {
+              defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
+              reqInit.body = JSON.stringify(paramData)
+            } else {
+              reqInit.body = paramData as RequestInit['body']
+            }
           }
         }
       }
@@ -209,36 +215,36 @@ class Request {
 export class ModernFetch {
   constructor(private readonly options: IFactoryOption & ModernFetchFactoryBaseUrl = {}) {
   }
-/**
- *添加request拦截
- * @param interceptor 请求拦截处理函数
- */
- addReqInterceptor(interceptor: IFactoryOption["reqInterceptor"]) {
-  this.options.reqInterceptor = interceptor
- }
+  /**
+   *添加request拦截
+   * @param interceptor 请求拦截处理函数
+   */
+  addReqInterceptor(interceptor: IFactoryOption["reqInterceptor"]) {
+    this.options.reqInterceptor = interceptor
+  }
 
- /**
-  * 添加response拦截
-  * @param interceptor 响应拦截处理函数
-  */
- addResInterceptor(interceptor: IFactoryOption["resInterceptor"]){
-  this.options.resInterceptor = interceptor
- }
+  /**
+   * 添加response拦截
+   * @param interceptor 响应拦截处理函数
+   */
+  addResInterceptor(interceptor: IFactoryOption["resInterceptor"]) {
+    this.options.resInterceptor = interceptor
+  }
 
- /**
-  * 添加错误拦截
-  * @param interceptor 错误拦截处理
-  */
- addErrInterceptor(interceptor: IFactoryOption["errInterceptor"]){
-  this.options.errInterceptor = interceptor
- }
+  /**
+   * 添加错误拦截
+   * @param interceptor 错误拦截处理
+   */
+  addErrInterceptor(interceptor: IFactoryOption["errInterceptor"]) {
+    this.options.errInterceptor = interceptor
+  }
   /**
   * 添加请求参数处理 运行在 reqInterceptor 前面
   * @param interceptor 请求参数处理
   */
-  addTransform(transform: IFactoryOption["transform"]){
+  addTransform(transform: IFactoryOption["transform"]) {
     this.options.transform = transform
-   }
+  }
   /**
    * 创建基于ModernFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
    * @param url 请求url
