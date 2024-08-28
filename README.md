@@ -43,13 +43,13 @@ export const CommonHttp = new ModernFetch({
 });
 
 // 添加请求拦截,每次发送请求都会执行该函数,常用修改请求配置参数，例如修改请求头
-CommonHttp.useReqInterceptor(async (config:RequestInit,reqUrl:string))=>{
+CommonHttp.addReqInterceptor(async (config:RequestInit,reqUrl:string))=>{
   config.headers.set('token', '123456');
   return config
  })
 
 //  添加响应拦截,每次响应都会执行该函数
-CommonHttp.useResInterceptor(async (response,responseType, retry/* retry是一个函数，可以再次发起本次请求 */))=>{
+CommonHttp.addResInterceptor(async (response,responseType, retry/* retry是一个函数，可以再次发起本次请求 */))=>{
      // 请求成功示例
     if (response.ok) {
       if(responseType === 'json'){
@@ -70,7 +70,7 @@ CommonHttp.useResInterceptor(async (response,responseType, retry/* retry是一�
  })
 
 //  添加请求错误拦截
-CommonHttp.useErrInterceptor((err)=> {
+CommonHttp.addErrInterceptor((err)=> {
     Toast.show({
       icon: 'fail',
       content: err.message,

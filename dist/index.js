@@ -190,21 +190,21 @@ class ModernFetch {
      *添加request拦截
      * @param interceptor 请求拦截处理函数
      */
-    useReqInterceptor(interceptor) {
+    addReqInterceptor(interceptor) {
         this.options.reqInterceptor = interceptor;
     }
     /**
      * 添加response拦截
      * @param interceptor 响应拦截处理函数
      */
-    useResInterceptor(interceptor) {
+    addResInterceptor(interceptor) {
         this.options.resInterceptor = interceptor;
     }
     /**
      * 添加错误拦截
      * @param interceptor 错误拦截处理
      */
-    useErrInterceptor(interceptor) {
+    addErrInterceptor(interceptor) {
         this.options.errInterceptor = interceptor;
     }
     /**

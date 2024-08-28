@@ -213,7 +213,7 @@ export class ModernFetch {
  *添加request拦截
  * @param interceptor 请求拦截处理函数
  */
- useReqInterceptor(interceptor: IFactoryOption["reqInterceptor"]) {
+ addReqInterceptor(interceptor: IFactoryOption["reqInterceptor"]) {
   this.options.reqInterceptor = interceptor
  }
 
@@ -221,7 +221,7 @@ export class ModernFetch {
   * 添加response拦截
   * @param interceptor 响应拦截处理函数
   */
- useResInterceptor(interceptor: IFactoryOption["resInterceptor"]){
+ addResInterceptor(interceptor: IFactoryOption["resInterceptor"]){
   this.options.resInterceptor = interceptor
  }
 
@@ -229,7 +229,7 @@ export class ModernFetch {
   * 添加错误拦截
   * @param interceptor 错误拦截处理
   */
- useErrInterceptor(interceptor: IFactoryOption["errInterceptor"]){
+ addErrInterceptor(interceptor: IFactoryOption["errInterceptor"]){
   this.options.errInterceptor = interceptor
  }
   /**
