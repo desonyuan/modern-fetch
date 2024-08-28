@@ -22,24 +22,39 @@ exports.request = request;
 // 请求类/
 class Request {
     constructor(options) {
-        const { headers, resInterceptor, errInterceptor, reqInterceptor, fetchOptions, url } = options;
+        const { headers, resInterceptor, errInterceptor, reqInterceptor, transform, fetchOptions, url } = options;
         this.resInterceptor = resInterceptor;
         this.errInterceptor = errInterceptor;
-        this.reqInterceptor = async (config, reqUrl) => {
-            if (reqInterceptor) {
-                return await reqInterceptor(config, reqUrl);
-            }
-            else {
-                return config;
-            }
-        };
+        this.reqInterceptor = reqInterceptor;
+        this.transform = transform;
         this.headers = headers;
         this.fetchOptions = fetchOptions || {};
         this.url = url;
     }
+    /**
+     *添加request拦截
+     * @param interceptor 请求拦截处理函数
+     */
+    useReqInterceptor(interceptor) {
+        this.reqInterceptor = interceptor;
+    }
+    /**
+     * 添加response拦截
+     * @param interceptor 响应拦截处理函数
+     */
+    useResInterceptor(interceptor) {
+        this.resInterceptor = interceptor;
+    }
+    /**
+     * 添加错误拦截
+     * @param interceptor 错误拦截处理
+     */
+    useErrInterceptor(interceptor) {
+        this.errInterceptor = interceptor;
+    }
     // 发送请求
     async fetch(url, requestInit, responseType) {
-        const reqInit = await this.reqInterceptor(requestInit, url);
+        const reqInit = this.reqInterceptor ? await this.reqInterceptor(requestInit, url) : requestInit;
         // 发送请求
         try {
             const response = await fetch(url, reqInit);
@@ -84,8 +99,9 @@ class Request {
             method,
             ...Object.assign({}, this.fetchOptions, fetchOptions),
         };
-        const bodyHandler = (paramData) => {
-            if (paramData) {
+        const bodyHandler = (_paramData) => {
+            if (_paramData) {
+                const paramData = this.transform ? this.transform(_paramData, method, url) : _paramData;
                 if (isObject(paramData)) {
                     if (method === "GET") {
                         url = `${url}?${new URLSearchParams(paramData).toString()}`;
@@ -125,7 +141,6 @@ class Request {
             bodyHandler(body);
         }
         reqInit.headers = new Headers(Object.assign({}, this.headers, defaultHeaders, _headers));
-        // const _reqInit = await this.reqInterceptor!(reqInit as IRequestInit)
         return [reqInit, url];
     }
     // 自定义url请求方法

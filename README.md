@@ -25,6 +25,7 @@ interface IFactoryOption {
   reqInterceptor?: (config: RequestInit) => Promise<RequestInit>
   resInterceptor?: (response: Response, responseType: ResponseType,retry:<T=any>()=>Promise<T>/* 这个retry方法再次发起本次请求，这对于双token方案很有用 */) => Promise<any>
   errInterceptor?: (err: any) => void
+  transform?: (data: any,method?: Methods,url?: string) => any //数据转换(对参数进行二次处理)
   baseUrl?: string;
   prefix?: string,
 }
@@ -39,21 +40,17 @@ export const CommonHttp = new ModernFetch({
     mode: 'cors',
     credentials: 'include',
   },
-  /*
-   *请求拦截器，每次发送请求都会执行该函数,常用修改请求配置参数，例如修改请求头
-   *@return RequestInit
-  */
- async resInterceptor(config:RequestInit){
+});
+
+// 添加请求拦截,每次发送请求都会执行该函数,常用修改请求配置参数，例如修改请求头
+CommonHttp.useReqInterceptor(async (config:RequestInit,reqUrl:string))=>{
   config.headers.set('token', '123456');
   return config
- }
+ })
 
-  /*
-   *响应拦截器 如果传入该函数，则会在请求成功后执行该函数，例如处理请求成功后的响应数据
-  *@return Promise<any>
-  */
-  async resInterceptor(response,responseType, retry/* retry是一个函数，可以再次发起本次请求 */) {
-    // 请求成功示例
+//  添加响应拦截,每次响应都会执行该函数
+CommonHttp.useResInterceptor(async (response,responseType, retry/* retry是一个函数，可以再次发起本次请求 */))=>{
+     // 请求成功示例
     if (response.ok) {
       if(responseType === 'json'){
         return await response.json()
@@ -62,7 +59,7 @@ export const CommonHttp = new ModernFetch({
       }else{
         // other processing
       }
-      // 重新请求示例: 举例-双token方案，refresh token过期，
+      // 重新请求示例:refresh token过期，retry可以再次发起本次请求
       if(response.status === 401){
         await RefreshToken();
         return await retry();
@@ -70,15 +67,16 @@ export const CommonHttp = new ModernFetch({
     } else {
       return Promise.reject(response);
     }
-  },
-  //fetch错误拦截，
-  errInterceptor(err) {
+ })
+
+//  添加请求错误拦截
+CommonHttp.useErrInterceptor((err)=> {
     Toast.show({
       icon: 'fail',
       content: err.message,
     });
-  },
-});
+  })
+
 /**
  * 基于上面创建的CommonHttp创建请求对象
  * PostApi对象拥有post、delete、get、put、patch请求方法;

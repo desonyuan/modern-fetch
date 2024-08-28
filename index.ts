@@ -1,9 +1,9 @@
 
 type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
-type DataType = RequestInit['body']|Record<any,any>|number;
+type DataType = RequestInit['body'] | Record<any, any> | number;
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">
-type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"| undefined
+type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer" | undefined
 type IRequestInit = RequestInit & { headers: Headers }
 type ModernFetchFactoryBaseUrl = {
   baseUrl?: string;
@@ -13,9 +13,10 @@ type ModernFetchFactoryBaseUrl = {
 interface IFactoryOption {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
-  reqInterceptor?: (requestInit: IRequestInit,url: string) => Promise<IRequestInit>
-  resInterceptor?: (response: Response, responseType: ResponseType, retry:<T=any>()=>Promise<T>) => Promise<any>
+  reqInterceptor?: (requestInit: IRequestInit, url: string) => Promise<IRequestInit>
+  resInterceptor?: (response: Response, responseType: ResponseType, retry: <T = any>() => Promise<T>) => Promise<any>
   errInterceptor?: (err: any) => void
+  transform?: (data: any, method?: Methods, url?: string) => any
 }
 
 // 发起请求方法参数类型
@@ -40,37 +41,57 @@ export const request = (url: string, options?: RequestInit): Promise<Response> =
 }
 // 请求类/
 class Request {
-  private readonly reqInterceptor: IFactoryOption["reqInterceptor"]
-  private readonly resInterceptor: IFactoryOption["resInterceptor"]
-  private readonly errInterceptor: IFactoryOption["errInterceptor"]
+  private reqInterceptor: IFactoryOption["reqInterceptor"]
+  private resInterceptor: IFactoryOption["resInterceptor"]
+  private errInterceptor: IFactoryOption["errInterceptor"]
+  private readonly transform: IFactoryOption["transform"]
   private readonly headers: IFactoryOption["headers"]
   private readonly fetchOptions: IFactoryOption["fetchOptions"]
   private readonly url!: string
 
   constructor(options: IFactoryOption & { url: string }) {
-    const { headers, resInterceptor, errInterceptor, reqInterceptor, fetchOptions, url } = options;
+    const { headers, resInterceptor, errInterceptor, reqInterceptor, transform, fetchOptions, url } = options;
     this.resInterceptor = resInterceptor;
     this.errInterceptor = errInterceptor;
-    this.reqInterceptor = async (config,reqUrl:string) => {
-      if (reqInterceptor) {
-        return await reqInterceptor(config,reqUrl)
-      } else {
-        return config
-      }
-    }
+    this.reqInterceptor = reqInterceptor
+    this.transform = transform;
     this.headers = headers;
     this.fetchOptions = fetchOptions || {};
     this.url = url
   }
+/**
+ *添加request拦截
+ * @param interceptor 请求拦截处理函数
+ */
+  useReqInterceptor(interceptor: IFactoryOption["reqInterceptor"]) {
+   this.reqInterceptor = interceptor
+  }
+
+  /**
+   * 添加response拦截
+   * @param interceptor 响应拦截处理函数
+   */
+  useResInterceptor(interceptor: IFactoryOption["resInterceptor"]){
+    this.resInterceptor = interceptor
+  }
+
+  /**
+   * 添加错误拦截
+   * @param interceptor 错误拦截处理
+   */
+  useErrInterceptor(interceptor: IFactoryOption["errInterceptor"]){
+    this.errInterceptor = interceptor
+  }
+
   // 发送请求
-  private async fetch(url: string, requestInit: IRequestInit, responseType?: ResponseType):Promise<any> {
-    const reqInit=await this.reqInterceptor!(requestInit,url)
+  private async fetch(url: string, requestInit: IRequestInit, responseType?: ResponseType): Promise<any> {
+    const reqInit =this.reqInterceptor? await this.reqInterceptor(requestInit, url):requestInit
     // 发送请求
     try {
       const response = await fetch(url, reqInit);
       // 有拦截器，执行拦截器
       if (this.resInterceptor) {
-        return this.resInterceptor(response, responseType, this.fetch.bind(this,url,requestInit,responseType))
+        return this.resInterceptor(response, responseType, this.fetch.bind(this, url, requestInit, responseType))
       } else {
         if (response.ok) {
           switch (responseType) {
@@ -108,8 +129,9 @@ class Request {
       ...Object.assign({}, this.fetchOptions, fetchOptions),
     };
 
-    const bodyHandler=(paramData?:DataType)=>{
-      if (paramData) {
+    const bodyHandler = (_paramData?: DataType) => {
+      if (_paramData) {
+        const paramData = this.transform ? this.transform(_paramData, method, url) : _paramData
         if (isObject(paramData)) {
           if (method === "GET") {
             url = `${url}?${new URLSearchParams(paramData as any).toString()}`;
@@ -122,28 +144,28 @@ class Request {
           if (paramDataIsString) {
             defaultHeaders['Content-Type'] = 'text/plain;charset=utf-8'
             reqInit.body = paramData as string
-          }else if(Array.isArray(paramData)){
+          } else if (Array.isArray(paramData)) {
             defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
             reqInit.body = JSON.stringify(paramData)
-          }else{
-            reqInit.body=paramData as RequestInit['body']
+          } else {
+            reqInit.body = paramData as RequestInit['body']
           }
         }
       }
     }
-    if(data){
-      const dataIsString = typeof data === "string"||typeof data === "number";
+
+    if (data) {
+      const dataIsString = typeof data === "string" || typeof data === "number";
       if (dataIsString) {
         url += `/${removeSlash(data.toString())}`; //拼接url
         bodyHandler(body)
-      }else{
+      } else {
         bodyHandler(data)
       }
-    }else{
+    } else {
       bodyHandler(body)
     }
     reqInit.headers = new Headers(Object.assign({}, this.headers, defaultHeaders, _headers));
-    // const _reqInit = await this.reqInterceptor!(reqInit as IRequestInit)
     return [reqInit as IRequestInit, url]
   }
   // 自定义url请求方法

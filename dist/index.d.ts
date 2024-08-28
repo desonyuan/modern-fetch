@@ -1,3 +1,4 @@
+type Methods = 'POST' | 'GET' | 'PUT' | 'PATCH' | 'DELETE';
 type DataType = RequestInit['body'] | Record<any, any> | number;
 type HeaderType = Record<string, string>;
 type IFetchOption = Omit<RequestInit, "body" | "method" | "headers">;
@@ -15,6 +16,7 @@ interface IFactoryOption {
     reqInterceptor?: (requestInit: IRequestInit, url: string) => Promise<IRequestInit>;
     resInterceptor?: (response: Response, responseType: ResponseType, retry: <T = any>() => Promise<T>) => Promise<any>;
     errInterceptor?: (err: any) => void;
+    transform?: (data: any, method?: Methods, url?: string) => any;
 }
 type RequestOption = {
     headers?: HeaderType;
@@ -27,15 +29,31 @@ type RequestOption = {
  */
 export declare const request: (url: string, options?: RequestInit) => Promise<Response>;
 declare class Request {
-    private readonly reqInterceptor;
-    private readonly resInterceptor;
-    private readonly errInterceptor;
+    private reqInterceptor;
+    private resInterceptor;
+    private errInterceptor;
+    private readonly transform;
     private readonly headers;
     private readonly fetchOptions;
     private readonly url;
     constructor(options: IFactoryOption & {
         url: string;
     });
+    /**
+     *添加request拦截
+     * @param interceptor 请求拦截处理函数
+     */
+    useReqInterceptor(interceptor: IFactoryOption["reqInterceptor"]): void;
+    /**
+     * 添加response拦截
+     * @param interceptor 响应拦截处理函数
+     */
+    useResInterceptor(interceptor: IFactoryOption["resInterceptor"]): void;
+    /**
+     * 添加错误拦截
+     * @param interceptor 错误拦截处理
+     */
+    useErrInterceptor(interceptor: IFactoryOption["errInterceptor"]): void;
     private fetch;
     private getRequestInit;
     request<T>(url: string, requestInit: RequestInit, responseType?: ResponseType): Promise<T>;
