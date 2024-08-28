@@ -59,29 +59,7 @@ class Request {
     this.fetchOptions = fetchOptions || {};
     this.url = url
   }
-/**
- *添加request拦截
- * @param interceptor 请求拦截处理函数
- */
-  useReqInterceptor(interceptor: IFactoryOption["reqInterceptor"]) {
-   this.reqInterceptor = interceptor
-  }
 
-  /**
-   * 添加response拦截
-   * @param interceptor 响应拦截处理函数
-   */
-  useResInterceptor(interceptor: IFactoryOption["resInterceptor"]){
-    this.resInterceptor = interceptor
-  }
-
-  /**
-   * 添加错误拦截
-   * @param interceptor 错误拦截处理
-   */
-  useErrInterceptor(interceptor: IFactoryOption["errInterceptor"]){
-    this.errInterceptor = interceptor
-  }
 
   // 发送请求
   private async fetch(url: string, requestInit: IRequestInit, responseType?: ResponseType): Promise<any> {
@@ -231,7 +209,29 @@ class Request {
 export class ModernFetch {
   constructor(private readonly options: IFactoryOption & ModernFetchFactoryBaseUrl = {}) {
   }
+/**
+ *添加request拦截
+ * @param interceptor 请求拦截处理函数
+ */
+ useReqInterceptor(interceptor: IFactoryOption["reqInterceptor"]) {
+  this.options.reqInterceptor = interceptor
+ }
 
+ /**
+  * 添加response拦截
+  * @param interceptor 响应拦截处理函数
+  */
+ useResInterceptor(interceptor: IFactoryOption["resInterceptor"]){
+  this.options.resInterceptor = interceptor
+ }
+
+ /**
+  * 添加错误拦截
+  * @param interceptor 错误拦截处理
+  */
+ useErrInterceptor(interceptor: IFactoryOption["errInterceptor"]){
+  this.options.errInterceptor = interceptor
+ }
   /**
    * 创建基于ModernFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
    * @param url 请求url

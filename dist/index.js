@@ -31,27 +31,6 @@ class Request {
         this.fetchOptions = fetchOptions || {};
         this.url = url;
     }
-    /**
-     *添加request拦截
-     * @param interceptor 请求拦截处理函数
-     */
-    useReqInterceptor(interceptor) {
-        this.reqInterceptor = interceptor;
-    }
-    /**
-     * 添加response拦截
-     * @param interceptor 响应拦截处理函数
-     */
-    useResInterceptor(interceptor) {
-        this.resInterceptor = interceptor;
-    }
-    /**
-     * 添加错误拦截
-     * @param interceptor 错误拦截处理
-     */
-    useErrInterceptor(interceptor) {
-        this.errInterceptor = interceptor;
-    }
     // 发送请求
     async fetch(url, requestInit, responseType) {
         const reqInit = this.reqInterceptor ? await this.reqInterceptor(requestInit, url) : requestInit;
@@ -206,6 +185,27 @@ class Request {
 class ModernFetch {
     constructor(options = {}) {
         this.options = options;
+    }
+    /**
+     *添加request拦截
+     * @param interceptor 请求拦截处理函数
+     */
+    useReqInterceptor(interceptor) {
+        this.options.reqInterceptor = interceptor;
+    }
+    /**
+     * 添加response拦截
+     * @param interceptor 响应拦截处理函数
+     */
+    useResInterceptor(interceptor) {
+        this.options.resInterceptor = interceptor;
+    }
+    /**
+     * 添加错误拦截
+     * @param interceptor 错误拦截处理
+     */
+    useErrInterceptor(interceptor) {
+        this.options.errInterceptor = interceptor;
     }
     /**
      * 创建基于ModernFetch实例返回的请求包装对象，包含基于url封装的get、post等方法

@@ -39,21 +39,6 @@ declare class Request {
     constructor(options: IFactoryOption & {
         url: string;
     });
-    /**
-     *添加request拦截
-     * @param interceptor 请求拦截处理函数
-     */
-    useReqInterceptor(interceptor: IFactoryOption["reqInterceptor"]): void;
-    /**
-     * 添加response拦截
-     * @param interceptor 响应拦截处理函数
-     */
-    useResInterceptor(interceptor: IFactoryOption["resInterceptor"]): void;
-    /**
-     * 添加错误拦截
-     * @param interceptor 错误拦截处理
-     */
-    useErrInterceptor(interceptor: IFactoryOption["errInterceptor"]): void;
     private fetch;
     private getRequestInit;
     request<T>(url: string, requestInit: RequestInit, responseType?: ResponseType): Promise<T>;
@@ -101,6 +86,21 @@ declare class Request {
 export declare class ModernFetch {
     private readonly options;
     constructor(options?: IFactoryOption & ModernFetchFactoryBaseUrl);
+    /**
+     *添加request拦截
+     * @param interceptor 请求拦截处理函数
+     */
+    useReqInterceptor(interceptor: IFactoryOption["reqInterceptor"]): void;
+    /**
+     * 添加response拦截
+     * @param interceptor 响应拦截处理函数
+     */
+    useResInterceptor(interceptor: IFactoryOption["resInterceptor"]): void;
+    /**
+     * 添加错误拦截
+     * @param interceptor 错误拦截处理
+     */
+    useErrInterceptor(interceptor: IFactoryOption["errInterceptor"]): void;
     /**
      * 创建基于ModernFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
      * @param url 请求url
