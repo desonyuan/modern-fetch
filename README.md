@@ -19,15 +19,18 @@ type ResponseType = "json" | "text" | "formData" | "blob" | "arrayBuffer"| undef
 
 type RequestOption = { headers?: HeaderType; fetchOptions?: IFetchOption; responseType?: ResponseType, data?: DataType } //调用请求方法的第二个参数
 
+type ReqInterceptor= (requestInit: IRequestInit, url: string) => Promise<IRequestInit>
+type ResInterceptor = <T = any>(response: Response, responseType: ResponseType, retry: () => Promise<T>) => Promise<any>
+type ErrInterceptor = (err: any) => void
+type Transform= (data: any, method?: Methods, url?: string) => any
+
 interface IFactoryOption {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
-  reqInterceptor?: (config: RequestInit) => Promise<RequestInit>
-  resInterceptor?: (response: Response, responseType: ResponseType,retry:<T=any>()=>Promise<T>/* 这个retry方法再次发起本次请求，这对于双token方案很有用 */) => Promise<any>
-  errInterceptor?: (err: any) => void
-  transform?: (data: any,method?: Methods,url?: string) => any //数据转换(对参数进行二次处理)
-  baseUrl?: string;
-  prefix?: string,
+  reqIntcp?: ReqInterceptor
+  resIntcp?: ResInterceptor
+  errIntcp?:ErrInterceptor
+  transform?: Transform
 }
 ```
 ### 使用示例
@@ -43,13 +46,13 @@ export const CommonHttp = new ModernFetch({
 });
 
 // 添加请求拦截,每次发送请求都会执行该函数,常用修改请求配置参数，例如修改请求头
-CommonHttp.addReqInterceptor(async (config:RequestInit,reqUrl:string))=>{
+CommonHttp.addReqIntcp(async (config:RequestInit,reqUrl:string))=>{
   config.headers.set('token', '123456');
   return config
  })
 
 //  添加响应拦截,每次响应都会执行该函数
-CommonHttp.addResInterceptor(async (response,responseType, retry/* retry是一个函数，可以再次发起本次请求 */))=>{
+CommonHttp.addResIntcp(async (response,responseType, retry/* retry是一个函数，可以再次发起本次请求 */))=>{
      // 请求成功示例
     if (response.ok) {
       if(responseType === 'json'){
@@ -70,12 +73,18 @@ CommonHttp.addResInterceptor(async (response,responseType, retry/* retry是一�
  })
 
 //  添加请求错误拦截
-CommonHttp.addErrInterceptor((err)=> {
+CommonHttp.addErrIntcp((err)=> {
     Toast.show({
       icon: 'fail',
       content: err.message,
     });
   })
+
+//你可能会创建多个实例，每个实例都写一次拦截器，比较麻烦，为此ModernFetch上有3个方法可以添加全局拦截器，当有全局拦截和实例拦截器都存在，执行实例拦截器，全局拦截器不执行。
+
+ModernFetch.addGlobalReqIntcp(interceptor: ReqInterceptor)
+ModernFetch.addGlobalResIntcp(interceptor: ResInterceptor)
+ModernFetch.addGlobalErrIntcp(interceptor: ErrInterceptor)
 
 /**
  * 基于上面创建的CommonHttp创建请求对象

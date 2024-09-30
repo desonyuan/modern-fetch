@@ -10,13 +10,22 @@ type ModernFetchFactoryBaseUrl = {
   prefix?: string,
 }
 
+type ReqInterceptor= (requestInit: IRequestInit, url: string) => Promise<IRequestInit>
+type ResInterceptor = <T = any>(response: Response, responseType: ResponseType, retry: () => Promise<T>) => Promise<any>
+type ErrInterceptor = (err: any) => void
+type Transform= (data: any, method?: Methods, url?: string) => any
+
+let glbReqIntcp: ReqInterceptor | undefined
+let glbResIntcp: ResInterceptor | undefined
+let glbErrIntcp: ErrInterceptor | undefined
+
 interface IFactoryOption {
   headers?: HeaderType
   fetchOptions?: IFetchOption,
-  reqInterceptor?: (requestInit: IRequestInit, url: string) => Promise<IRequestInit>
-  resInterceptor?: (response: Response, responseType: ResponseType, retry: <T = any>() => Promise<T>) => Promise<any>
-  errInterceptor?: (err: any) => void
-  transform?: (data: any, method?: Methods, url?: string) => any
+  reqIntcp?: ReqInterceptor
+  resIntcp?: ResInterceptor
+  errIntcp?:ErrInterceptor
+  transform?: Transform
 }
 
 // 发起请求方法参数类型
@@ -33,28 +42,32 @@ const removeSlash = (str: string) => {
 const isObject = (value: any) => {
   return Object.prototype.toString.call(value) === '[object Object]';
 }
-/**
- *fetch原生请求 用于不做任何包装的fetch请求
- */
-export const request = (url: string, options?: RequestInit): Promise<Response> => {
-  return fetch(url, options)
-}
+
 // 请求类/
 class Request {
-  private reqInterceptor: IFactoryOption["reqInterceptor"]
-  private resInterceptor: IFactoryOption["resInterceptor"]
-  private errInterceptor: IFactoryOption["errInterceptor"]
-  private readonly transform: IFactoryOption["transform"]
+  private reqIntcp?: ReqInterceptor
+  private resIntcp?: ResInterceptor
+  private errIntcp?: ErrInterceptor
+  private readonly transform?: Transform
   private readonly headers: IFactoryOption["headers"]
   private readonly fetchOptions: IFactoryOption["fetchOptions"]
   private readonly url!: string
 
   constructor(options: IFactoryOption & { url: string }) {
-    const { headers, resInterceptor, errInterceptor, reqInterceptor, transform, fetchOptions, url } = options;
-    this.resInterceptor = resInterceptor;
-    this.errInterceptor = errInterceptor;
-    this.reqInterceptor = reqInterceptor
-    this.transform = transform;
+    const { headers, resIntcp, errIntcp, reqIntcp, transform, fetchOptions, url } = options;
+    if(reqIntcp){
+      this.reqIntcp = reqIntcp;
+    }
+    if(resIntcp){
+      this.resIntcp = resIntcp;
+    }
+     if(errIntcp){
+      this.errIntcp = errIntcp;
+    }
+    if(transform){
+      this.transform = transform;
+    }
+
     this.headers = headers;
     this.fetchOptions = fetchOptions || {};
     this.url = url
@@ -63,13 +76,15 @@ class Request {
 
   // 发送请求
   private async fetch(url: string, requestInit: IRequestInit, responseType?: ResponseType): Promise<any> {
-    const reqInit = this.reqInterceptor ? await this.reqInterceptor(requestInit, url) : requestInit
+    const reqInit = this.reqIntcp ? await this.reqIntcp(requestInit, url) :glbReqIntcp?await glbReqIntcp(requestInit, url): requestInit
     // 发送请求
     try {
       const response = await fetch(url, reqInit);
       // 有拦截器，执行拦截器
-      if (this.resInterceptor) {
-        return this.resInterceptor(response, responseType, this.fetch.bind(this, url, requestInit, responseType))
+      if (this.resIntcp) {
+        return this.resIntcp(response, responseType, this.fetch.bind(this, url, requestInit, responseType))
+      }else if(glbResIntcp){
+        return glbResIntcp(response, responseType, this.fetch.bind(this, url, requestInit, responseType))
       } else {
         if (response.ok) {
           switch (responseType) {
@@ -91,8 +106,10 @@ class Request {
         }
       }
     } catch (err) {
-      if (this.errInterceptor) {
-        this.errInterceptor(err as TypeError)
+      if (this.errIntcp) {
+        this.errIntcp(err as TypeError)
+      }else if(glbErrIntcp){
+        glbErrIntcp(err as TypeError)
       }
       return Promise.reject(err)
     }
@@ -216,33 +233,54 @@ export class ModernFetch {
   constructor(private readonly options: IFactoryOption & ModernFetchFactoryBaseUrl = {}) {
   }
   /**
+   *  添加全局请求拦截
+   * @param interceptor 请求拦截处理函数
+   */
+  static addGlobalReqIntcp(interceptor: ReqInterceptor) {
+    glbReqIntcp = interceptor
+  }
+  /**
+   *  添加全局响应拦截
+   * @param interceptor  响应拦截处理函数
+   */
+  static addGlobalResIntcp(interceptor: ResInterceptor) {
+    glbResIntcp = interceptor
+  }
+  /**
+   *  添加全局错误拦截
+   * @param interceptor  错误拦截处理函数
+   */
+  static addGlobalErrIntcp(interceptor: ErrInterceptor) {
+    glbErrIntcp = interceptor
+  }
+  /**
    *添加request拦截
    * @param interceptor 请求拦截处理函数
    */
-  addReqInterceptor(interceptor: IFactoryOption["reqInterceptor"]) {
-    this.options.reqInterceptor = interceptor
+  addReqIntcp(interceptor: ReqInterceptor) {
+    this.options.reqIntcp = interceptor
   }
 
   /**
    * 添加response拦截
    * @param interceptor 响应拦截处理函数
    */
-  addResInterceptor(interceptor: IFactoryOption["resInterceptor"]) {
-    this.options.resInterceptor = interceptor
+  addResIntcp(interceptor: ResInterceptor) {
+    this.options.resIntcp = interceptor
   }
 
   /**
    * 添加错误拦截
    * @param interceptor 错误拦截处理
    */
-  addErrInterceptor(interceptor: IFactoryOption["errInterceptor"]) {
-    this.options.errInterceptor = interceptor
+  addErrIntcp(interceptor: ErrInterceptor) {
+    this.options.errIntcp = interceptor
   }
   /**
   * 添加请求参数处理 运行在 reqInterceptor 前面
-  * @param interceptor 请求参数处理
+  * @param interceptor 请求参数转换处理
   */
-  addTransform(transform: IFactoryOption["transform"]) {
+  addTransform(transform: Transform) {
     this.options.transform = transform
   }
   /**

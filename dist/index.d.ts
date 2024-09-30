@@ -10,13 +10,17 @@ type ModernFetchFactoryBaseUrl = {
     baseUrl?: string;
     prefix?: string;
 };
+type ReqInterceptor = (requestInit: IRequestInit, url: string) => Promise<IRequestInit>;
+type ResInterceptor = <T = any>(response: Response, responseType: ResponseType, retry: () => Promise<T>) => Promise<any>;
+type ErrInterceptor = (err: any) => void;
+type Transform = (data: any, method?: Methods, url?: string) => any;
 interface IFactoryOption {
     headers?: HeaderType;
     fetchOptions?: IFetchOption;
-    reqInterceptor?: (requestInit: IRequestInit, url: string) => Promise<IRequestInit>;
-    resInterceptor?: (response: Response, responseType: ResponseType, retry: <T = any>() => Promise<T>) => Promise<any>;
-    errInterceptor?: (err: any) => void;
-    transform?: (data: any, method?: Methods, url?: string) => any;
+    reqIntcp?: ReqInterceptor;
+    resIntcp?: ResInterceptor;
+    errIntcp?: ErrInterceptor;
+    transform?: Transform;
 }
 type RequestOption = {
     headers?: HeaderType;
@@ -24,15 +28,11 @@ type RequestOption = {
     responseType?: ResponseType;
     data?: DataType;
 };
-/**
- *fetch原生请求 用于不做任何包装的fetch请求
- */
-export declare const request: (url: string, options?: RequestInit) => Promise<Response>;
 declare class Request {
-    private reqInterceptor;
-    private resInterceptor;
-    private errInterceptor;
-    private readonly transform;
+    private reqIntcp?;
+    private resIntcp?;
+    private errIntcp?;
+    private readonly transform?;
     private readonly headers;
     private readonly fetchOptions;
     private readonly url;
@@ -87,25 +87,40 @@ export declare class ModernFetch {
     private readonly options;
     constructor(options?: IFactoryOption & ModernFetchFactoryBaseUrl);
     /**
+     *  添加全局请求拦截
+     * @param interceptor 请求拦截处理函数
+     */
+    static addGlobalReqIntcp(interceptor: ReqInterceptor): void;
+    /**
+     *  添加全局响应拦截
+     * @param interceptor  响应拦截处理函数
+     */
+    static addGlobalResIntcp(interceptor: ResInterceptor): void;
+    /**
+     *  添加全局错误拦截
+     * @param interceptor  错误拦截处理函数
+     */
+    static addGlobalErrIntcp(interceptor: ErrInterceptor): void;
+    /**
      *添加request拦截
      * @param interceptor 请求拦截处理函数
      */
-    addReqInterceptor(interceptor: IFactoryOption["reqInterceptor"]): void;
+    addReqIntcp(interceptor: ReqInterceptor): void;
     /**
      * 添加response拦截
      * @param interceptor 响应拦截处理函数
      */
-    addResInterceptor(interceptor: IFactoryOption["resInterceptor"]): void;
+    addResIntcp(interceptor: ResInterceptor): void;
     /**
      * 添加错误拦截
      * @param interceptor 错误拦截处理
      */
-    addErrInterceptor(interceptor: IFactoryOption["errInterceptor"]): void;
+    addErrIntcp(interceptor: ErrInterceptor): void;
     /**
     * 添加请求参数处理 运行在 reqInterceptor 前面
-    * @param interceptor 请求参数处理
+    * @param interceptor 请求参数转换处理
     */
-    addTransform(transform: IFactoryOption["transform"]): void;
+    addTransform(transform: Transform): void;
     /**
      * 创建基于ModernFetch实例返回的请求包装对象，包含基于url封装的get、post等方法
      * @param url 请求url

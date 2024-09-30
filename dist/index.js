@@ -20,7 +20,10 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ModernFetch = exports.request = void 0;
+exports.ModernFetch = void 0;
+let glbReqIntcp;
+let glbResIntcp;
+let glbErrIntcp;
 /**
  * 删除字符串两边的'/'
  * @param {string} str
@@ -32,21 +35,22 @@ const removeSlash = (str) => {
 const isObject = (value) => {
     return Object.prototype.toString.call(value) === '[object Object]';
 };
-/**
- *fetch原生请求 用于不做任何包装的fetch请求
- */
-const request = (url, options) => {
-    return fetch(url, options);
-};
-exports.request = request;
 // 请求类/
 class Request {
     constructor(options) {
-        const { headers, resInterceptor, errInterceptor, reqInterceptor, transform, fetchOptions, url } = options;
-        this.resInterceptor = resInterceptor;
-        this.errInterceptor = errInterceptor;
-        this.reqInterceptor = reqInterceptor;
-        this.transform = transform;
+        const { headers, resIntcp, errIntcp, reqIntcp, transform, fetchOptions, url } = options;
+        if (reqIntcp) {
+            this.reqIntcp = reqIntcp;
+        }
+        if (resIntcp) {
+            this.resIntcp = resIntcp;
+        }
+        if (errIntcp) {
+            this.errIntcp = errIntcp;
+        }
+        if (transform) {
+            this.transform = transform;
+        }
         this.headers = headers;
         this.fetchOptions = fetchOptions || {};
         this.url = url;
@@ -54,13 +58,16 @@ class Request {
     // 发送请求
     fetch(url, requestInit, responseType) {
         return __awaiter(this, void 0, void 0, function* () {
-            const reqInit = this.reqInterceptor ? yield this.reqInterceptor(requestInit, url) : requestInit;
+            const reqInit = this.reqIntcp ? yield this.reqIntcp(requestInit, url) : glbReqIntcp ? yield glbReqIntcp(requestInit, url) : requestInit;
             // 发送请求
             try {
                 const response = yield fetch(url, reqInit);
                 // 有拦截器，执行拦截器
-                if (this.resInterceptor) {
-                    return this.resInterceptor(response, responseType, this.fetch.bind(this, url, requestInit, responseType));
+                if (this.resIntcp) {
+                    return this.resIntcp(response, responseType, this.fetch.bind(this, url, requestInit, responseType));
+                }
+                else if (glbResIntcp) {
+                    return glbResIntcp(response, responseType, this.fetch.bind(this, url, requestInit, responseType));
                 }
                 else {
                     if (response.ok) {
@@ -85,8 +92,11 @@ class Request {
                 }
             }
             catch (err) {
-                if (this.errInterceptor) {
-                    this.errInterceptor(err);
+                if (this.errIntcp) {
+                    this.errIntcp(err);
+                }
+                else if (glbErrIntcp) {
+                    glbErrIntcp(err);
                 }
                 return Promise.reject(err);
             }
@@ -217,29 +227,50 @@ class ModernFetch {
         this.options = options;
     }
     /**
+     *  添加全局请求拦截
+     * @param interceptor 请求拦截处理函数
+     */
+    static addGlobalReqIntcp(interceptor) {
+        glbReqIntcp = interceptor;
+    }
+    /**
+     *  添加全局响应拦截
+     * @param interceptor  响应拦截处理函数
+     */
+    static addGlobalResIntcp(interceptor) {
+        glbResIntcp = interceptor;
+    }
+    /**
+     *  添加全局错误拦截
+     * @param interceptor  错误拦截处理函数
+     */
+    static addGlobalErrIntcp(interceptor) {
+        glbErrIntcp = interceptor;
+    }
+    /**
      *添加request拦截
      * @param interceptor 请求拦截处理函数
      */
-    addReqInterceptor(interceptor) {
-        this.options.reqInterceptor = interceptor;
+    addReqIntcp(interceptor) {
+        this.options.reqIntcp = interceptor;
     }
     /**
      * 添加response拦截
      * @param interceptor 响应拦截处理函数
      */
-    addResInterceptor(interceptor) {
-        this.options.resInterceptor = interceptor;
+    addResIntcp(interceptor) {
+        this.options.resIntcp = interceptor;
     }
     /**
      * 添加错误拦截
      * @param interceptor 错误拦截处理
      */
-    addErrInterceptor(interceptor) {
-        this.options.errInterceptor = interceptor;
+    addErrIntcp(interceptor) {
+        this.options.errIntcp = interceptor;
     }
     /**
     * 添加请求参数处理 运行在 reqInterceptor 前面
-    * @param interceptor 请求参数处理
+    * @param interceptor 请求参数转换处理
     */
     addTransform(transform) {
         this.options.transform = transform;
