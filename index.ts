@@ -44,7 +44,7 @@ const isObject = (value: any) => {
 }
 
 // 请求类/
-class Request {
+export class Request {
   private reqIntcp?: ReqInterceptor
   private resIntcp?: ResInterceptor
   private errIntcp?: ErrInterceptor
@@ -76,7 +76,7 @@ class Request {
 
   // 发送请求
   private async fetch(url: string, requestInit: IRequestInit, responseType?: ResponseType): Promise<any> {
-    const reqInit = this.reqIntcp ? await this.reqIntcp(requestInit, url) :glbReqIntcp?await glbReqIntcp(requestInit, url): requestInit
+    const reqInit = this.reqIntcp ? await this.reqIntcp(requestInit, url) :glbReqIntcp ? await glbReqIntcp(requestInit, url): requestInit
     // 发送请求
     try {
       const response = await fetch(url, reqInit);
@@ -288,7 +288,7 @@ export class ModernFetch {
    * @param url 请求url
    * @returns Request 实例
    */
-  create(url = '') {
+  create(url = ''):Request {
     const { baseUrl, prefix, ...props } = this.options;
     if (prefix) {
       if (baseUrl) {
@@ -305,3 +305,5 @@ export class ModernFetch {
     return new Request({ url, ...props });
   }
 }
+
+

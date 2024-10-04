@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -19,8 +18,6 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ModernFetch = void 0;
 let glbReqIntcp;
 let glbResIntcp;
 let glbErrIntcp;
@@ -36,7 +33,7 @@ const isObject = (value) => {
     return Object.prototype.toString.call(value) === '[object Object]';
 };
 // 请求类/
-class Request {
+export class Request {
     constructor(options) {
         const { headers, resIntcp, errIntcp, reqIntcp, transform, fetchOptions, url } = options;
         if (reqIntcp) {
@@ -103,8 +100,8 @@ class Request {
         });
     }
     // 处理RequestInit参数
-    getRequestInit(url, method, data, dataAndOptions = {}) {
-        return __awaiter(this, void 0, void 0, function* () {
+    getRequestInit(url_1, method_1, data_1) {
+        return __awaiter(this, arguments, void 0, function* (url, method, data, dataAndOptions = {}) {
             const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
             const defaultHeaders = {};
             const reqInit = Object.assign({ method }, Object.assign({}, this.fetchOptions, fetchOptions));
@@ -165,8 +162,8 @@ class Request {
         });
     }
     // 发送请求
-    send(method, data, dataAndOptions = {}) {
-        return __awaiter(this, void 0, void 0, function* () {
+    send(method_1, data_1) {
+        return __awaiter(this, arguments, void 0, function* (method, data, dataAndOptions = {}) {
             const [requestInit, url] = yield this.getRequestInit(this.url, method, data, dataAndOptions);
             const { responseType } = dataAndOptions;
             return this.fetch(url, requestInit, responseType);
@@ -222,7 +219,7 @@ class Request {
 /**
  * 构造ModernFetch实例，通常需要传入BaseUrl
  */
-class ModernFetch {
+export class ModernFetch {
     constructor(options = {}) {
         this.options = options;
     }
@@ -298,4 +295,3 @@ class ModernFetch {
         return new Request(Object.assign({ url }, props));
     }
 }
-exports.ModernFetch = ModernFetch;

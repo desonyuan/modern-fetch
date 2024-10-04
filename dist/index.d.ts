@@ -28,7 +28,7 @@ type RequestOption = {
     responseType?: ResponseType;
     data?: DataType;
 };
-declare class Request {
+export declare class Request {
     private reqIntcp?;
     private resIntcp?;
     private errIntcp?;
