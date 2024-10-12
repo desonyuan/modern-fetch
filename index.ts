@@ -76,10 +76,10 @@ export class Request {
 
   // 发送请求
   private async fetch(url: string, requestInit: IRequestInit, responseType?: ResponseType): Promise<any> {
-    const reqInit = this.reqIntcp ? await this.reqIntcp(requestInit, url) :glbReqIntcp ? await glbReqIntcp(requestInit, url): requestInit
+
     // 发送请求
     try {
-      const response = await fetch(url, reqInit);
+      const response = await fetch(url, requestInit);
       // 有拦截器，执行拦截器
       if (this.resIntcp) {
         return this.resIntcp(response, responseType, this.fetch.bind(this, url, requestInit, responseType))
@@ -136,19 +136,19 @@ export class Request {
             }
           } else {
             defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
-            reqInit.body = JSON.stringify(paramData)
+            reqInit.body = paramData
           }
         } else {
           if (!isGet) {
             const paramDataIsString = typeof paramData === "string";
             if (paramDataIsString) {
               defaultHeaders['Content-Type'] = 'text/plain;charset=utf-8'
-              reqInit.body = paramData as string
+              reqInit.body = paramData as any
             } else if (Array.isArray(paramData)) {
               defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
-              reqInit.body = JSON.stringify(paramData)
+              reqInit.body = paramData as any
             } else {
-              reqInit.body = paramData as RequestInit['body']
+              reqInit.body = paramData as any
             }
           }
         }
@@ -166,6 +166,7 @@ export class Request {
     } else {
       bodyHandler(body)
     }
+
     reqInit.headers = new Headers(Object.assign({}, this.headers, defaultHeaders, _headers));
     return [reqInit as IRequestInit, url]
   }
@@ -177,7 +178,11 @@ export class Request {
   private async send(method: Methods, data?: DataType, dataAndOptions: RequestOption = {}) {
     const [requestInit, url] = await this.getRequestInit(this.url, method, data, dataAndOptions);
     const { responseType } = dataAndOptions
-    return this.fetch(url, requestInit, responseType)
+    const reqInit = this.reqIntcp ? await this.reqIntcp(requestInit, url) :glbReqIntcp ? await glbReqIntcp(requestInit, url): requestInit
+    if(isObject(reqInit.body)){
+      reqInit.body = JSON.stringify(reqInit.body)
+    }
+    return this.fetch(url, reqInit, responseType)
   }
   /**
    * post请求

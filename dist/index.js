@@ -55,10 +55,9 @@ export class Request {
     // 发送请求
     fetch(url, requestInit, responseType) {
         return __awaiter(this, void 0, void 0, function* () {
-            const reqInit = this.reqIntcp ? yield this.reqIntcp(requestInit, url) : glbReqIntcp ? yield glbReqIntcp(requestInit, url) : requestInit;
             // 发送请求
             try {
-                const response = yield fetch(url, reqInit);
+                const response = yield fetch(url, requestInit);
                 // 有拦截器，执行拦截器
                 if (this.resIntcp) {
                     return this.resIntcp(response, responseType, this.fetch.bind(this, url, requestInit, responseType));
@@ -117,7 +116,7 @@ export class Request {
                         }
                         else {
                             defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
-                            reqInit.body = JSON.stringify(paramData);
+                            reqInit.body = paramData;
                         }
                     }
                     else {
@@ -129,7 +128,7 @@ export class Request {
                             }
                             else if (Array.isArray(paramData)) {
                                 defaultHeaders['Content-Type'] = 'application/json;charset=utf-8';
-                                reqInit.body = JSON.stringify(paramData);
+                                reqInit.body = paramData;
                             }
                             else {
                                 reqInit.body = paramData;
@@ -166,7 +165,11 @@ export class Request {
         return __awaiter(this, arguments, void 0, function* (method, data, dataAndOptions = {}) {
             const [requestInit, url] = yield this.getRequestInit(this.url, method, data, dataAndOptions);
             const { responseType } = dataAndOptions;
-            return this.fetch(url, requestInit, responseType);
+            const reqInit = this.reqIntcp ? yield this.reqIntcp(requestInit, url) : glbReqIntcp ? yield glbReqIntcp(requestInit, url) : requestInit;
+            if (isObject(reqInit.body)) {
+                reqInit.body = JSON.stringify(reqInit.body);
+            }
+            return this.fetch(url, reqInit, responseType);
         });
     }
     /**
