@@ -132,7 +132,14 @@ export class Request {
         if (isObject(paramData)) {
           if (isGet) {
             if (Object.keys(paramData).length > 0) {
-              url = `${url}?${new URLSearchParams(paramData as any).toString()}`;
+              url = `${url}?`;
+              for (const key in (paramData as Record<string, string>)) {
+                const val = paramData[key];
+                if (val !== undefined && val !== null) {
+                  url += `${key}=${encodeURIComponent(val)}&`
+                }
+              }
+              url = url.slice(0, -1);
             }
           } else {
             defaultHeaders['Content-Type'] = 'application/json;charset=utf-8'
@@ -310,5 +317,3 @@ export class ModernFetch {
     return new Request({ url, ...props });
   }
 }
-
-

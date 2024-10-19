@@ -111,7 +111,14 @@ export class Request {
                     if (isObject(paramData)) {
                         if (isGet) {
                             if (Object.keys(paramData).length > 0) {
-                                url = `${url}?${new URLSearchParams(paramData).toString()}`;
+                                url = `${url}?`;
+                                for (const key in paramData) {
+                                    const val = paramData[key];
+                                    if (val !== undefined && val !== null) {
+                                        url += `${key}=${encodeURIComponent(val)}&`;
+                                    }
+                                }
+                                url = url.slice(0, -1);
                             }
                         }
                         else {
