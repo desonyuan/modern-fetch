@@ -135,7 +135,7 @@ export class Request {
               url = `${url}?`;
               for (const key in (paramData as Record<string, string>)) {
                 const val = paramData[key];
-                if (val !== undefined && val !== null) {
+                if (val !== undefined) {
                   url += `${key}=${encodeURIComponent(val)}&`
                 }
               }
