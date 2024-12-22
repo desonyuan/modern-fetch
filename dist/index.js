@@ -101,9 +101,9 @@ export class Request {
     // 处理RequestInit参数
     getRequestInit(url_1, method_1, data_1) {
         return __awaiter(this, arguments, void 0, function* (url, method, data, dataAndOptions = {}) {
-            const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
+            const { data: body, headers: _headers, fetchOptions } = dataAndOptions, props = __rest(dataAndOptions, ["data", "headers", "fetchOptions"]);
             const defaultHeaders = {};
-            const reqInit = Object.assign({ method }, Object.assign({}, this.fetchOptions, fetchOptions));
+            const reqInit = Object.assign({ method }, Object.assign({}, this.fetchOptions, fetchOptions, props));
             const bodyHandler = (_paramData) => {
                 if (_paramData) {
                     const paramData = this.transform ? this.transform(_paramData, method, url) : _paramData;

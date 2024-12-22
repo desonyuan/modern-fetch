@@ -116,12 +116,12 @@ export class Request {
   }
   // 处理RequestInit参数
   private async getRequestInit(url: string, method: Methods, data?: DataType, dataAndOptions: RequestOption = {}): Promise<[IRequestInit, string]> {
-    const { data: body, headers: _headers, fetchOptions } = dataAndOptions;
+    const { data: body, headers: _headers, fetchOptions,...props } = dataAndOptions;
     const defaultHeaders: Record<string, string> = {
     }
     const reqInit: RequestInit = {
       method,
-      ...Object.assign({}, this.fetchOptions, fetchOptions),
+      ...Object.assign({}, this.fetchOptions, fetchOptions,props),
     };
 
     const bodyHandler = (_paramData?: DataType) => {
